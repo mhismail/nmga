@@ -1,4 +1,4 @@
-#STABLE
+#STABLE-test
 
 #check if packages are installed, and if not install them
 if (!require("shiny")) install.packages("shiny")
