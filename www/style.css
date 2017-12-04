@@ -1,0 +1,224 @@
+.modal-open .form-group.shiny-input-container.shiny-input-radiogroup.shiny-input-container-inline.shinyjs-resettable {
+    display: inline;
+    margin-right: 10px;
+}
+
+.modal-open .btn-group.btn-group-container-sw {
+    display: inline;
+}
+
+
+.radiobtn{
+display:block !important;
+}
+
+.modal .modal-dialog .modal-content .modal-body {
+  -webkit-transform: none !important;
+  -moz-transform: none !important;
+  -ms-transform: none !important;
+  -o-transform: none !important;
+  transform: none !important;
+	
+}
+
+tfoot {
+    display: table-header-group;
+}
+
+.green{
+	color:green;
+}
+
+.red{
+	color:red;
+}
+
+
+
+svg{
+	height:auto !important
+}
+
+#strtypes button.btn.radiobtn.btn-default.active {
+	background: #0a9eb7;
+	color: white;
+}
+
+#ncmt button.btn.radiobtn.btn-default.active {
+	background: #0a9eb7;
+	color: white;
+}
+
+
+.btn-group, .btn-group-vertical {
+	position: relative;
+	display: inline-block;
+	vertical-align: middle;
+
+}
+
+.btn-group > .btn-group{
+	box-shadow: 2px 2px 3px 0px #ccc;
+}
+
+#GAsettings{
+	border:none;
+}
+
+
+
+.shiny-table.spacing-s > tbody > tr > td, .shiny-table.spacing-s > tfoot > tr > td {
+	padding: 5px;
+	text-align: center;
+}
+
+.panel-group .panel {
+	margin-bottom: 0;
+	border-radius: 4px;
+	text-align: center;
+}
+
+.panel-default > .panel-heading {
+	color: #fff;
+	background-color: #43a4a0;
+	border-color: #000;
+	line-height: 0;
+	margin: 0;
+	border-radius: 0;
+	padding-top: 5px;
+	padding-bottom: 5px;
+}
+
+th.dt-center, td.dt-center { text-align: center; }
+
+.dataTables_wrapper { overflow-x: scroll;
+	overflow-y: scroll;
+	height: 80vh;
+}
+
+table.dataTable tbody tr {
+	line-height: 0.5;
+}
+
+td { white-space: nowrap; }
+
+#ace {
+	height: 85vh;
+}
+
+#previewtext {
+	height: 85vh;
+}
+
+button#viewmod:hover {
+	color: #090540;
+	transition: height 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77), padding-top 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77);
+	height: 45px;
+	padding-top: 13.25px;
+	box-shadow: 0 0 8px red;
+}
+
+button#viewmod {
+	position: absolute;
+	margin: 0 auto;
+	left: 0;
+	right: 0;
+	width: 105px;
+	height: 40px;
+	z-index: 1000;
+	border-top: none;
+	border-radius: 20px;
+	border-top-left-radius: 0;
+	border-top-right-radius: 0;
+	background: #ffffff;
+	color: black;
+	border-color: #ec0804;
+	border-width: 2px;
+	border-style: solid;
+	box-shadow: 0 0 8px;
+	border-top: none;
+	transition: height 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77), padding-top 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77);
+}
+
+.btn{border-radius: 0}
+
+.modal.in .modal-dialog {
+	width: 99%;
+	margin-top:5px
+}
+
+.col-sm-6:first-of-type {
+	border-right: dashed 2px #2d2d2d;
+	z-index: 100;
+}
+
+div#tokentype {
+	margin-top: 50px !important;
+}
+
+#tokeneditdiv {
+	box-shadow: 0px 0px 0px #000;
+	margin: 10px 0 10px 0;
+	padding: 10px;
+	border: #c0c0d6 2px dashed;
+}
+
+.tokeneditdiv {
+	box-shadow: 0 0 10px;
+	margin: 10px 0;
+}
+
+.shiny-options-group {
+	border: 1px solid grey;
+	min-height: 100px;
+	max-height: 150px;
+	overflow-y: auto;
+
+}
+
+.radio-bs label{
+	margin:0;
+	line-height: 22px;
+}
+
+.radio-bs {
+	padding-left: 0px;
+	margin-left: 0px; 
+	margin-top: 0;
+}
+
+button.btn.radiobtn.btn-default.active {
+	background: #0fdc0f;
+	color: white;
+}
+
+.shiny-input-container:not(.shiny-input-container-inline) {
+	width: 100%;
+}
+
+.radio-bs input[type='radio'] {
+	opacity: 0;
+	z-index: 1;
+	display: none;
+}
+
+.radio-bs label{
+	width: 100%;
+}
+
+.tokentype{
+	display: none;
+}
+
+.radio-bs-primary input[type='radio']:checked + label {
+	background-color: #337ab7;
+	color: white;
+}
+
+.radio-bs label::before{
+	display:none
+}
+
+.radio-bs label::after{
+	display:none
+}
