@@ -16,7 +16,6 @@ if (!require("foreach")) install.packages("foreach")
 if (!require("doSNOW")) install.packages("doSNOW")
 if (!require("future")) install.packages("future")
 
-rm(list=ls(all=TRUE))
 
 
 
@@ -24,12 +23,35 @@ rm(list=ls(all=TRUE))
 theme_set(theme_bw())
 
 # Define functions --------------------------------------------------------
+
+# Function Name : run.model-------------------------------------------------------------------------------------
+# Description: Start execution of NONMEM run via PsN
+# Arguments: directory(required)-directory in which "mod.ctl" is located 
+#            model(optional)- model name (to be used for identifying in running task) 
+# Example: run.model("models/All/mod1","mod1")
+
 run.model <- function(directory,model=NULL){
   shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results mod.ctl'),wait = T)
 }
 
-#allcombos() will create all possible combinations of tokens sets. alltokens argument must be 
-# df with $tokengroup, $tokenset, $token
+
+
+# Function Name : allcombos-------------------------------------------------------------------------------------
+# Description: create all possible combinations of tokens sets. alltokens argument must be 
+#              a dataframe with $tokengroup, $tokenset, $token
+# Arguments: alltokens (required) - dataframe with tokengroup, tokenset, and token columns
+# Example: 
+# alltokens <- read.csv("alltokens.csv",as.is=T)
+# allcombos (alltokens)
+# Output example:
+
+# tokengroup1 | tokengroup2 | tokengroup3
+# ------------+-------------+-------------
+# tokenset11  | tokenset 21 | tokenset31
+# ------------+-------------+-------------
+# tokenset12  | tokenset 21 | tokenset31
+# etc.
+
 allcombos <- function (alltokens){
   tokenset1 <- alltokens
   
@@ -54,18 +76,15 @@ allcombos <- function (alltokens){
   
   # create data frame of every possible combination of token sets
   allmods <-do.call(expand.grid,list)
-  # exampe of allmods structure
-  
-  # tokengroup1 | tokengroup2 | tokengroup3
-  # ------------+-------------+-------------
-  # tokenset11  | tokenset 21 | tokenset31
-  # ------------+-------------+-------------
-  # tokenset12  | tokenset 21 | tokenset31
-  # etc.
+
   
   return (allmods)
 }
 
+
+# Function Name : selection-------------------------------------------------------------------------------------
+# Description: Performs tournament selection on group of models, returns models in tabular format
+# Arguments: candidates (required) - character vector of paths to models
 selection <- function(candidates){
   pool <- c()
   
@@ -133,6 +152,7 @@ mutation <- function (crossoveredmods, alltokens, options= list(pmutation=.05)){
     gene <- names(crossoveredmods)[i]
     for (j in  1:dim(crossoveredmods)[1]){
       if(runif(1)<=pmutation){
+        print(alltokens)
         crossoveredmods[j,i]<- sample(unique(filter(alltokens,tokengroup==gene)$tokenset),1)
       }
     }
@@ -165,7 +185,7 @@ nextGA <- function (mods,alltokens){
   modlookup <- read.csv("allmods.csv")
   newmodnumbers <- merge(modlookup,c)$X
   newmods <-  paste0("models/All/mod",newmodnumbers)
-  
+
   homepath <-getwd()
   for (i in unique(newmods)){
     relpath <- i
@@ -320,16 +340,15 @@ p3cmttext <- function(compartment,cmtn,ncmts){
 
 linmod <- function (x,y,xlab="X",ylab="Y"){
   cor <- lm(y~ x)
-
   return(c(R="Linear",Model=paste0(xlab,"on",ylab),Estimate=round(as.numeric(cor[[1]][2]),3),Pval=signif(summary(cor)$coefficients[,4][2] ,3)))
-  
 }
+
 expmod <- function (x,y,xlab="X",ylab="Y"){
   if (any(is.nan(log(y)))) return( NULL)
   cor <- lm(log(y)~ x)
   return(c(R="Exp",Model=paste0(xlab,"on",ylab),Estimate=round(as.numeric(cor[[1]][2]),3),Pval=signif(summary(cor)$coefficients[,4][2] ,3)))
-  
 }
+
 powmod <- function (x,y,xlab="X",ylab="Y"){
   if (any(is.nan(log(y))) | any(is.nan(log(x)))| any(is.infinite(log(x)))) return( NULL)
   cor <- lm(log(y)~ log(x))
@@ -355,8 +374,6 @@ ui <- fluidPage(
              textAreaInput("previewtext",label = NULL,width="100%",cols=NULL,value="")),
     tabPanel("Data",DT::dataTableOutput("data")))),
   column(6,
-         
-
           column(12,
                  align="center",
                  actionButton("openGA","Initiate Genetic Algorithm"),
@@ -443,15 +460,15 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 
 server <- function(input, output,session) {
+
+  
+  invalidate <- reactiveValues(nextGA=1,future=1)
   observe({
     copyTo <- input$draggedfile[1]
     copy <- input$draggedfile[2]
-    print(copyTo)
-    print(copy)
+
     if(!is.null(copyTo)){
       if(copyTo %in% list.dirs(paste0(getwd(),"/models/"),recursive = F,full.names = F)){
-    print(copyTo)
-    print(copy)
     file.copy(copy, paste0("models/",copyTo), recursive=TRUE)
     
     mod <-read.csv(paste0(copy,"/mod.csv"),as.is=T)
@@ -467,6 +484,7 @@ server <- function(input, output,session) {
   # Define globals
   alltokens <-data.frame(tokengroup= character(0), tokenset= character(0), token = character(0), stringsAsFactors=FALSE)
   GAProgress <- data.frame (Generation = numeric(0), Fitness = numeric(0))
+  f <- NULL
   
   
   onclick("loadproj",{
@@ -619,8 +637,6 @@ server <- function(input, output,session) {
     },priority = -11)
 # END ---------------------------------------------------------------------
   
-  
-  
 # highlight selected tokengroup -------------------------------------------
 # highlight package used: https://github.com/garysieling/jquery-highlighttextarea
   onclick("tokengroupinput",
@@ -654,9 +670,6 @@ server <- function(input, output,session) {
             updateTextAreaInput(session,"previewtext",value=x)
             words <-paste0("'",tokenlist,"',",collapse="")
             words<-substr(words, 1, nchar(words)-1)
-
-
-
 
             updateTabsetPanel(session,"tabs",selected = "Preview")
             })
@@ -820,11 +833,11 @@ onclick("addtokenedit",{
                                  token= c("N/A",
                                           "N/A",
                                           paste0("+(",input$cov,")*THETA([1])"),
-                                          "(-100,1,100)",
+                                          "(-100,.01,100)",
                                           paste0("*",input$cov,"**THETA([1])"),
                                           "(-100,1,100)",
                                           paste0("*exp(",input$cov,")*THETA([1])"),
-                                          "(-100,1,100)",
+                                          "(-100,.01,100)",
                                           paste0("*(1+",input$cov,"*THETA([1]))"),
                                           "(-100,1,100)"), stringsAsFactors=FALSE)
             
@@ -1206,6 +1219,9 @@ onclick("addtokenedit",{
     }
     }
     
+    runjs('$("#refreshmods2").click()')
+    
+    
   })
   
   # All models modal --------------------------------------------------------
@@ -1296,24 +1312,40 @@ onclick("addtokenedit",{
     
   })
   
-  observe({
-    f <<- future ({
-      a <- shell("tasklist /v",intern=T)
-    })%plan% multiprocess
-#     # Re-execute this reactive expression after 1000 milliseconds
-
-  })
+  observeEvent(input$startGA,{invalidate$future=isolate(invalidate$future)+1})
+  observeEvent(input$nextGA,{invalidate$future=isolate(invalidate$future)+1})
+  
+  
+  observeEvent({
+    invalidate$future
+    },{
+    print("started")
+      delay(10,{
+    f <<- future({
+      b<-1
+      while(length(b)>0){
+        a <- shell("tasklist /v",intern=T)
+        b<- as.vector(na.omit(str_extract(a,"mod[0-9]* - execute")))
+      }}) %plan% multiprocess
+    invalidate$nextGA <- isolate(invalidate$nextGA)+1})
+  },ignoreInit = T)
 #   
 #   
   observe({
-
+    invalidate$nextGA
+  
+    if(!is.null(f)){
       if (!resolved(f)){
-      invalidateLater(1000, session)
+        print("not done")
+        invalidateLater(10000, session)
       }
     
       if(resolved(f)){
-      print(value(f))
+        print("boog")
+        runjs('$("#refreshGAmods").click()')
+        runjs('$("#nextGA").click()')
       }
+    }
     
   })
   
@@ -1405,7 +1437,7 @@ onclick("addtokenedit",{
     GAProgress <- data.frame (Generation = numeric(0), Fitness = numeric(0))
     
     nmods <- length(list.files("./models/All"))
-    nindiv = 20
+    nindiv = 40
     if (nindiv>nmods) nindiv<- nmods
     initiateGA(nmods,nindiv)
   })
