@@ -15,6 +15,8 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("foreach")) install.packages("foreach")
 if (!require("doSNOW")) install.packages("doSNOW")
 if (!require("future")) install.packages("future")
+# if (!require("git2r")) install.packages("git2r")
+
 
 
 
@@ -31,7 +33,7 @@ theme_set(theme_bw())
 # Example: run.model("models/All/mod1","mod1")
 
 run.model <- function(directory,model=NULL){
-  shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results mod.ctl'),wait = T)
+  shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results -clean=3 mod.ctl'),wait = T)
 }
 
 
@@ -591,6 +593,11 @@ server <- function(input, output,session) {
       removeClass("covrequiredtheta","green")
       addClass("covrequiredtheta","red")}
     
+#     fun<-paste0("$('#ace').highlightTextarea({words: ['{', '}'],
+#                                                           id: 'highlighted2'});")
+#     
+#     runjs(fun)
+    
   },priority = 100)
   
 # END ---------------------------------------------------------------------
@@ -644,9 +651,33 @@ server <- function(input, output,session) {
           updateTabsetPanel(session,"tabs",selected = "Control Stream")
 
           runjs(" $('#ace').highlightTextarea('destroy')")
-          fun<-paste0("$('#ace').highlightTextarea({words: ['{",input$tokengroupinput,"}',
-                                                            '{",input$tokengroupinput,":[0-9]}'],
-                                                          id: 'highlighted'});")
+          fun<-paste0("$('#ace').highlightTextarea({
+                                                      words: [{
+                                                        color: '#FFFF00',
+                                                        words: ['{",input$tokengroupinput,"}',
+                                                                '{",input$tokengroupinput,":[0-9]}']
+                                                      }
+                                                      , {
+                                                        color: '#ff1b0f',
+                                                        words: []
+                                                      }]
+                                                      });")
+          
+#           words:[{
+#             words: ['{",input$tokengroupinput,"}',
+#                     '{",input$tokengroupinput,":[0-9]}'],
+#             color: '#FFFF00'
+#           },{words: ['{','}'],
+#             color: '#FFFF00'}])
+          
+#           words: [{
+#             color: '#ADF0FF',
+#             words: ['Lorem ipsum', 'vulputate']
+#           }, {
+#             color: '#FFFF00',
+#             words: ['Donec']
+#           }]
+
 
           delay(1,runjs(fun)) #needs delay for tokengroup change to register first
           })
@@ -1048,8 +1079,6 @@ onclick("addtokenedit",{
 
   onclick("refreshmods",{
     
-    allmods <- allcombos(alltokens)
-    write.csv(allmods,"allmods.csv")
     #delete models folder if it exists
     unlink("models",force = TRUE,recursive = T)
     
@@ -1057,9 +1086,18 @@ onclick("addtokenedit",{
     dir.create("models")
     dir.create("models/All")
     
-    alltokens$token <- as.character(alltokens$token)
+    allmods <- allcombos(alltokens)
+    write.csv(allmods,"allmods.csv")
+    
     ctlstream <- input$ace
-    total = 0
+    #copy data to subfolder
+    a<- strsplit(ctlstream,"\n")[[1]]
+    datapath <- strsplit(a[startsWith(a,"$DATA")]," ")[[1]][2]
+    file.copy(datapath,paste0("models"))
+    
+    
+    alltokens$token <- as.character(alltokens$token)
+    ctlstream <- gsub("\\$DATA\\s*", "\\$DATA ../../",ctlstream)
     
     cl<-makeCluster(20) 
     registerDoSNOW(cl)
@@ -1113,13 +1151,10 @@ onclick("addtokenedit",{
       a <-cbind(data.frame(Number=i,Path=paste0("models/All/mod",i,"/mod.ctl")),OFV="",Fitness="",S="",C="",NTHETA=maxtheta,NETA=maxeta,allmods[i,])
       write.csv(a,paste0("models/All/mod",i,"/mod.csv"),row.names = F)
       
-      #copy data to subfolder
-      a<- strsplit(x,"\n")[[1]]
-      datapath <- strsplit(a[startsWith(a,"$DATA")]," ")[[1]][2]
-      file.copy(datapath,paste0("models/All/mod",i))
-      total = total +(Sys.time()-timenow)
-      print(total)
+
+
     }
+
     
     stopCluster(cl)
   })
