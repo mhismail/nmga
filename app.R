@@ -26,6 +26,38 @@ theme_set(theme_bw())
 
 # Define functions --------------------------------------------------------
 
+create.model<- function(controlstream,alltokens,phenotype,tokengroups){ 
+  x<-controlstream 
+  for (j in 1:length(phenotype)){ 
+    selectedTokenGroup <- tokengroups[j] 
+    selectedTokenSet <- phenotype[j] 
+    
+    tokengrouptext <- paste0("\\{",selectedTokenGroup,"\\}") 
+    tokenlist <- filter(alltokens,tokengroup==selectedTokenGroup,tokenset==as.character(selectedTokenSet))$token 
+    tokenlist[tokenlist=="N/A"]<-"" 
+    numberedtokengroups <- as.numeric(gsub(paste0("\\{",selectedTokenGroup,":|\\}"),  
+                                           "", 
+                                           regmatches(x, gregexpr(paste0("\\{",selectedTokenGroup,":([0-9])\\}"), x))[[1]])) 
+    for (k in numberedtokengroups){ 
+      x<- gsub(paste0("\\{",selectedTokenGroup,":",k,"\\}"),tokenlist[k],x) 
+    } 
+    maxtheta <- gsub("[THETA\\(\\)]", "", regmatches(x, gregexpr("THETA\\(.*?\\)", x))[[1]]) 
+    maxtheta<-max(as.numeric(c(maxtheta,0)),na.rm=T) 
+    maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]]) 
+    maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T) 
+    
+    for (k in 1:length(tokenlist)){ 
+      
+      
+      x<-sub(tokengrouptext,tokenlist[k],x) 
+      x<-gsubfn("THETA\\(\\[([0-9])\\]\\)", x~ paste0("THETA(",as.numeric(x)+maxtheta,")"),x) 
+      
+      x<-gsubfn("ETA\\(\\[([0-9])\\]\\)", x~ paste0("ETA(",as.numeric(x)+maxeta,")"),x) 
+    } 
+  } 
+  return(x) 
+} 
+
 # Function Name : run.model-------------------------------------------------------------------------------------
 # Description: Start execution of NONMEM run via PsN
 # Arguments: directory(required)-directory in which "mod.ctl" is located 
@@ -1088,6 +1120,7 @@ onclick("addtokenedit",{
     
     allmods <- allcombos(alltokens)
     write.csv(allmods,"allmods.csv")
+    allmods[] <- lapply(allmods, as.character) 
     
     ctlstream <- input$ace
     #copy data to subfolder
@@ -1096,49 +1129,20 @@ onclick("addtokenedit",{
     file.copy(datapath,paste0("models"))
     
     
-    alltokens$token <- as.character(alltokens$token)
-    ctlstream <- gsub("\\$DATA\\s*", "\\$DATA ../../",ctlstream)
+    alltokens$token <- as.character(alltokens$token) 
+    alltokens$tokenset <- as.character(alltokens$tokenset) 
     
-    cl<-makeCluster(20) 
-    registerDoSNOW(cl)
+    ctlstream <- gsub("\\$DATA\\s*", "\\$DATA ../../",ctlstream) 
+    create.model<-create.model 
+    
+    cl<-makeCluster(20)  
+    registerDoSNOW(cl) 
     
     # for each row, for each column replace {tokengroup} with the cretaed token
     foreach ( i = 1:dim(allmods)[1],.packages = c("dplyr","gsubfn")) %dopar% {
       x <- ctlstream
-      for (j in 1:dim(allmods)[2]){
-        selectedTokenGroup <- names(allmods)[j]
-        selectedTokenSet <- allmods[i,j]
-        
-        tokengrouptext <- paste0("\\{",selectedTokenGroup,"\\}")
-        tokenlist <- filter(alltokens,tokengroup==selectedTokenGroup,tokenset==selectedTokenSet)$token
-        tokenlist[tokenlist=="N/A"]<-""
-        print(x)
-        numberedtokengroups <- as.numeric(gsub(paste0("\\{",selectedTokenGroup,":|\\}"), 
-                                               "",
-                                               regmatches(x, gregexpr(paste0("\\{",selectedTokenGroup,":([0-9])\\}"), x))[[1]]))
-        print(numberedtokengroups)
-        for (k in numberedtokengroups){
-          x<- gsub(paste0("\\{",selectedTokenGroup,":",k,"\\}"),tokenlist[k],x)
-        }
-        
-
-        
-        
-        maxtheta <- gsub("[THETA\\(\\)]", "", regmatches(x, gregexpr("THETA\\(.*?\\)", x))[[1]])
-        maxtheta<-max(as.numeric(c(maxtheta,0)),na.rm=T)
-        maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]])
-        maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T)
-        
-        for (k in 1:length(tokenlist)){
-
-
-            x<-sub(tokengrouptext,tokenlist[k],x)
-            x<-gsubfn("THETA\\(\\[([0-9])\\]\\)", x~ paste0("THETA(",as.numeric(x)+maxtheta,")"),x)
-            
-            x<-gsubfn("ETA\\(\\[([0-9])\\]\\)", x~ paste0("ETA(",as.numeric(x)+maxeta,")"),x)
-        }
-      }
-      timenow <- Sys.time()
+      
+      x<-create.model(x,alltokens,allmods[i,],names(allmods))
       
       dir.create(paste0("models/All/mod",i))
       writeLines(x,paste0("models/All/mod",i,"/mod.ctl"))
