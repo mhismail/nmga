@@ -66,6 +66,8 @@ create.model<- function(controlstream,alltokens,phenotype,tokengroups){
 
 run.model <- function(directory,model=NULL){
   shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results -clean=3 mod.ctl'),wait = T)
+  write.table(data.frame(directory,Sys.time()),
+              "modelruntemp.csv", sep = ",",row.names = F,col.names = F,  append = T)
 }
 
 
@@ -256,18 +258,18 @@ randomnextGA <- function (nmods,nindiv){
 }
 
 retrieveresults <- function(directory){
-  pheni <- read.csv(paste0(directory,"/mod.csv"),as.is = T,stringsAsFactors = F)
+  print(directory)
+  print(file.exists(paste0(directory,"/results/raw_results_mod.csv")))
   if (file.exists(paste0(directory,"/results/raw_results_mod.csv"))){
     results<- read.csv(paste0(directory,"/results/raw_results_mod.csv"),as.is = T,stringsAsFactors = F)
-    pheninew <- mutate(pheni, OFV=results$ofv[1],
+    results <- data.frame(Number=sub(".*mod([0-9]+).*","\\1",directory),
+                          OFV=results$ofv[1],
                     S=results$minimization_successful[1],
-                    C=results$covariance_step_successful[1],
-                    Fitness=OFV+NTHETA*5+NETA*5-C*5-S*10)
-    if (!(identical(pheninew,pheni))) write.csv(pheninew,paste0(directory,"/mod.csv"),row.names = F)
-    pheni <- pheninew
+                    C=results$covariance_step_successful[1])
+    return(results)
+    
 
     }
-  return(pheni)
 }
 
 
@@ -1120,6 +1122,8 @@ onclick("addtokenedit",{
     
     allmods <- allcombos(alltokens)
     write.csv(allmods,"allmods.csv")
+    # write.csv(data.frame("Number","Path","OFV","Fitness","S","C","NTHETA","NETA",names(allmods)),"allmodsresults.csv")
+    
     allmods[] <- lapply(allmods, as.character) 
     
     ctlstream <- input$ace
@@ -1139,7 +1143,7 @@ onclick("addtokenedit",{
     registerDoSNOW(cl) 
     
     # for each row, for each column replace {tokengroup} with the cretaed token
-    foreach ( i = 1:dim(allmods)[1],.packages = c("dplyr","gsubfn")) %dopar% {
+    a <- foreach ( i = 1:dim(allmods)[1],.packages = c("dplyr","gsubfn"),.combine = "rbind") %dopar% {
       x <- ctlstream
       
       x<-create.model(x,alltokens,allmods[i,],names(allmods))
@@ -1153,41 +1157,67 @@ onclick("addtokenedit",{
       maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]])
       maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T)
       a <-cbind(data.frame(Number=i,Path=paste0("models/All/mod",i,"/mod.ctl")),OFV="",Fitness="",S="",C="",NTHETA=maxtheta,NETA=maxeta,allmods[i,])
-      write.csv(a,paste0("models/All/mod",i,"/mod.csv"),row.names = F)
+
       
-
-
+      write.csv(a,paste0("models/All/mod",i,"/mod.csv"),row.names = F)
+      a
     }
 
     
     stopCluster(cl)
+    write.csv(a,"allmodsresults.csv",row.names = F)
   })
+  
+  
   
   # Create table to be displayed in UI
   allmods2<- reactive({
+    
+    
     z<-Sys.time()
-    input$refreshmods
+    # input$refreshmods
     input$refreshmods2
+    allmodsresults <- read.csv("allmodsresults.csv")
     
-    allmods1 <- data.frame ()
-    allmodslist <-list()
-    selecteddir <- input$selecteddir
-    mod.directories <- paste0("./models/",selecteddir,"/",list.files(paste0("./models/",selecteddir)))
+    if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){
+      modelsran <- read.csv("modelruntemp.csv",header = F)%>%distinct(1,.keep_all=T)
+      print(modelsran)
+      checkpresent <- file.exists(paste0(modelsran[,1],"/results/PsN_execute_plots.R"))
+      resultspresent <- modelsran[checkpresent,]
+      print(dim(resultspresent))
+      if (dim(resultspresent)[1]>0){
+      print(resultspresent)
+      results <- lapply(resultspresent[,1],retrieveresults)
+      removerefreshed <- modelsran[-checkpresent,]
+      print(removerefreshed)
+      write.table(removerefreshed,
+                  "modelruntemp.csv", sep = ",",row.names = F,col.names = F)
+      print(results)
+      resultsdf <- data.frame()
+      resultsdf <- rbind(resultsdf, do.call(rbind, results))
+      resultsdf[,1]<-as.numeric(as.character(resultsdf[,1]))
+      mods <- resultsdf[,1]
+      print(match(mods,allmodsresults$Number))
+      print(allmodsresults)
+      match(allmodsresults$Number,mods)
+      
+      #logic for below - match function finds the indices of allmodsresults in which the number equals the 
+      # value in mods. na.omit removes na values. 1,3,5,6 are columns to be updated
+      # right side !is.na is safegaurd for models that were run but have since been deleted before results were fetched
+      allmodsresults[na.omit(match(mods,allmodsresults$Number)),c(1,3,5,6)] <- resultsdf[!is.na(match(mods,allmodsresults$Number)),]
+      write.csv(allmodsresults,"allmodsresults.csv",row.names = F)
+      }
+      
+    }
 
-    nmods <- length(mod.directories)
-    allmodslist<-lapply(mod.directories,retrieveresults)
-    print(Sys.time()-z)
-    
-    allmods1<- rbind(allmods1, do.call(rbind, allmodslist))
-    allmods1<-mutate(allmods1,Number = as.numeric(Number))%>%arrange(Number)
-    print(Sys.time()-z)
     
     updateRadioGroupButtons(session,"selecteddir",selected=selecteddir,choices =list.dirs("./models",full.names = F,recursive = F))
     delay(100,runjs('$(".radiobtn").on("dragenter",function () {
         y=$(this).find("input").val()
           console.log("hi")
       })'))
-    allmods1
+    allmodsresults
+    
     
     
     
@@ -1214,6 +1244,7 @@ onclick("addtokenedit",{
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
     for (i in 1:length(input$modeltable_selected)){
       path<-as.character(allmods2()[input$modeltable_selected[i]+1,2])
+      write.csv(allmods2()[-(input$modeltable_selected[i]+1),],"allmodsresults.csv",row.names=F)
       relpath <- sub("/mod.ctl","",path)
       unlink(paste0(homepath,'/',relpath),recursive = TRUE)
     }
@@ -1348,8 +1379,12 @@ onclick("addtokenedit",{
         y=$(this).find("input").val()
           console.log("hi")
       })'))
+
     
   })
+  
+  
+  
   
   observeEvent(input$startGA,{invalidate$future=isolate(invalidate$future)+1})
   observeEvent(input$nextGA,{invalidate$future=isolate(invalidate$future)+1})
