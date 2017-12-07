@@ -1181,24 +1181,17 @@ onclick("addtokenedit",{
     
     if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){
       modelsran <- read.csv("modelruntemp.csv",header = F)%>%distinct(1,.keep_all=T)
-      print(modelsran)
       checkpresent <- file.exists(paste0(modelsran[,1],"/results/PsN_execute_plots.R"))
       resultspresent <- modelsran[checkpresent,]
-      print(dim(resultspresent))
       if (dim(resultspresent)[1]>0){
-      print(resultspresent)
       results <- lapply(resultspresent[,1],retrieveresults)
       removerefreshed <- modelsran[-checkpresent,]
-      print(removerefreshed)
       write.table(removerefreshed,
                   "modelruntemp.csv", sep = ",",row.names = F,col.names = F)
-      print(results)
       resultsdf <- data.frame()
       resultsdf <- rbind(resultsdf, do.call(rbind, results))
       resultsdf[,1]<-as.numeric(as.character(resultsdf[,1]))
       mods <- resultsdf[,1]
-      print(match(mods,allmodsresults$Number))
-      print(allmodsresults)
       match(allmodsresults$Number,mods)
       
       #logic for below - match function finds the indices of allmodsresults in which the number equals the 
