@@ -1165,7 +1165,7 @@ onclick("addtokenedit",{
 
     
     stopCluster(cl)
-    write.csv(a,"allmodsresults.csv",row.names = F)
+    write.csv(a,"Allmodsresults.csv",row.names = F)
   })
   
   
@@ -1177,15 +1177,17 @@ onclick("addtokenedit",{
     z<-Sys.time()
     # input$refreshmods
     input$refreshmods2
-    allmodsresults <- read.csv("allmodsresults.csv")
+    allmodsresults <- read.csv("Allmodsresults.csv")
     
     if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){
       modelsran <- read.csv("modelruntemp.csv",header = F)%>%distinct(1,.keep_all=T)
       checkpresent <- file.exists(paste0(modelsran[,1],"/results/PsN_execute_plots.R"))
+      print(checkpresent)
       resultspresent <- modelsran[checkpresent,]
       if (dim(resultspresent)[1]>0){
       results <- lapply(resultspresent[,1],retrieveresults)
-      removerefreshed <- modelsran[-checkpresent,]
+      removerefreshed <- modelsran[!checkpresent,]
+      print(removerefreshed)
       write.table(removerefreshed,
                   "modelruntemp.csv", sep = ",",row.names = F,col.names = F)
       resultsdf <- data.frame()
@@ -1198,7 +1200,7 @@ onclick("addtokenedit",{
       # value in mods. na.omit removes na values. 1,3,5,6 are columns to be updated
       # right side !is.na is safegaurd for models that were run but have since been deleted before results were fetched
       allmodsresults[na.omit(match(mods,allmodsresults$Number)),c(1,3,5,6)] <- resultsdf[!is.na(match(mods,allmodsresults$Number)),]
-      write.csv(allmodsresults,"allmodsresults.csv",row.names = F)
+      write.csv(allmodsresults,"Allmodsresults.csv",row.names = F)
       }
       
     }
@@ -1209,6 +1211,7 @@ onclick("addtokenedit",{
         y=$(this).find("input").val()
           console.log("hi")
       })'))
+    print(Sys.time()-z)
     allmodsresults
     
     
@@ -1237,7 +1240,7 @@ onclick("addtokenedit",{
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
     for (i in 1:length(input$modeltable_selected)){
       path<-as.character(allmods2()[input$modeltable_selected[i]+1,2])
-      write.csv(allmods2()[-(input$modeltable_selected[i]+1),],"allmodsresults.csv",row.names=F)
+      write.csv(allmods2()[-(input$modeltable_selected[i]+1),],"Allmodsresults.csv",row.names=F)
       relpath <- sub("/mod.ctl","",path)
       unlink(paste0(homepath,'/',relpath),recursive = TRUE)
     }
