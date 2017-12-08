@@ -30,37 +30,78 @@ theme_set(theme_bw())
 #create.model takes a control stream, a token data frame (used as a look up)
 #  to translate phenotypes to model syntax, a model phenotype, and tokengroups
 # it returns a new control stream
+
 create.model<- function(controlstream,alltokens,phenotype,tokengroups){ 
   x<-controlstream 
-  for (j in 1:length(phenotype)){ 
+  
+  for (j in 1:length(phenotype)){
     selectedTokenGroup <- tokengroups[j] 
-    selectedTokenSet <- phenotype[j] 
+    selectedTokenSet <- phenotype[1,j] 
     
     tokengrouptext <- paste0("\\{",selectedTokenGroup,"\\}") 
-    tokenlist <- filter(alltokens,tokengroup==selectedTokenGroup,tokenset==as.character(selectedTokenSet))$token 
+    tokenlist <- alltokens[(alltokens$tokengroup==selectedTokenGroup & alltokens$tokenset==selectedTokenSet),3]# filter(alltokens,tokengroup==selectedTokenGroup,tokenset==selectedTokenSet)$token 
     tokenlist[tokenlist=="N/A"]<-"" 
     numberedtokengroups <- as.numeric(gsub(paste0("\\{",selectedTokenGroup,":|\\}"),  
                                            "", 
                                            regmatches(x, gregexpr(paste0("\\{",selectedTokenGroup,":([0-9])\\}"), x))[[1]])) 
+    
     for (k in numberedtokengroups){ 
       x<- gsub(paste0("\\{",selectedTokenGroup,":",k,"\\}"),tokenlist[k],x) 
     } 
+    
+    
     maxtheta <- gsub("[THETA\\(\\)]", "", regmatches(x, gregexpr("THETA\\(.*?\\)", x))[[1]]) 
     maxtheta<-max(as.numeric(c(maxtheta,0)),na.rm=T) 
     maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]]) 
     maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T) 
     
+    
     for (k in 1:length(tokenlist)){ 
       
-      
       x<-sub(tokengrouptext,tokenlist[k],x) 
-      x<-gsubfn("THETA\\(\\[([0-9])\\]\\)", x~ paste0("THETA(",as.numeric(x)+maxtheta,")"),x) 
       
-      x<-gsubfn("ETA\\(\\[([0-9])\\]\\)", x~ paste0("ETA(",as.numeric(x)+maxeta,")"),x) 
-    } 
+    }
+    if (grepl("THETA\\(\\[([0-9])\\]\\)",x)){
+      x<-gsubfn("THETA\\(\\[([0-9])\\]\\)", x~ paste0("THETA(",as.numeric(x)+maxtheta,")"),x,backref = -1,engine="R") 
+    }
+    if(grepl("ETA\\(\\[([0-9])\\]\\)",x)){
+      x<-gsubfn("ETA\\(\\[([0-9])\\]\\)", x~ paste0("ETA(",as.numeric(x)+maxeta,")"),x,backref = -1,engine="R")
+    }
+    
   } 
   return(x) 
 } 
+
+# create.model<- function(controlstream,alltokens,phenotype,tokengroups){ 
+#   x<-controlstream 
+#   for (j in 1:length(phenotype)){ 
+#     selectedTokenGroup <- tokengroups[j] 
+#     selectedTokenSet <- phenotype[j] 
+#     
+#     tokengrouptext <- paste0("\\{",selectedTokenGroup,"\\}") 
+#     tokenlist <- alltokens[(alltokens$tokengroup==selectedTokenGroup & alltokens$tokenset==as.character(selectedTokenSet)),3]# filter(alltokens,tokengroup==selectedTokenGroup,tokenset==as.character(selectedTokenSet))$token 
+#     tokenlist[tokenlist=="N/A"]<-"" 
+#     numberedtokengroups <- as.numeric(gsub(paste0("\\{",selectedTokenGroup,":|\\}"),  
+#                                            "", 
+#                                            regmatches(x, gregexpr(paste0("\\{",selectedTokenGroup,":([0-9])\\}"), x))[[1]])) 
+#     for (k in numberedtokengroups){ 
+#       x<- gsub(paste0("\\{",selectedTokenGroup,":",k,"\\}"),tokenlist[k],x) 
+#     } 
+#     maxtheta <- gsub("[THETA\\(\\)]", "", regmatches(x, gregexpr("THETA\\(.*?\\)", x))[[1]]) 
+#     maxtheta<-max(as.numeric(c(maxtheta,0)),na.rm=T) 
+#     maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]]) 
+#     maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T) 
+#     
+#     for (k in 1:length(tokenlist)){ 
+# 
+#       x<-sub(tokengrouptext,tokenlist[k],x) 
+#       x<-gsubfn("THETA\\(\\[([0-9])\\]\\)", x~ paste0("THETA(",as.numeric(x)+maxtheta,")"),x) 
+#       
+#       x<-gsubfn("ETA\\(\\[([0-9])\\]\\)", x~ paste0("ETA(",as.numeric(x)+maxeta,")"),x) 
+#     } 
+#   } 
+#   return(x) 
+# } 
 
 # Function Name : run.model-------------------------------------------------------------------------------------
 # Description: Start execution of NONMEM run via PsN
@@ -1152,11 +1193,12 @@ onclick("addtokenedit",{
     ctlstream <- gsub("\\$DATA\\s*", "\\$DATA ../../",ctlstream) 
     create.model<-create.model 
     
-    cl<-makeCluster(20)  
+    cl<-makeCluster(38)  
     registerDoSNOW(cl) 
     
+    z <- Sys.time()
     # for each row, for each column replace {tokengroup} with the cretaed token
-    a <- foreach ( i = 1:dim(allmods)[1],.packages = c("dplyr","gsubfn"),.combine = "rbind") %dopar% {
+    a<-foreach ( i = 1:dim(allmods)[1],.packages = c("dplyr","gsubfn")) %dopar% {
       x <- ctlstream
       
       x<-create.model(x,alltokens,allmods[i,],names(allmods))
@@ -1175,10 +1217,12 @@ onclick("addtokenedit",{
       write.csv(a,paste0("models/All/mod",i,"/mod.csv"),row.names = F)
       a
     }
-
-    
     stopCluster(cl)
-    write.csv(a,"Allmodsresults.csv",row.names = F)
+    
+    allmodsresults <- data.table::rbindlist(a)
+    
+    print(Sys.time()-z)
+    write.csv(allmodsresults,"Allmodsresults.csv",row.names = F)
   })
   
   
@@ -1188,9 +1232,11 @@ onclick("addtokenedit",{
         z<-Sys.time()
     input$refreshmods2
     if (input$selecteddir=="All"){
-    # input$refreshmods
+    input$refreshmods
     
     allmodsresults <- read.csv("Allmodsresults.csv")
+    selecteddir <- input$selecteddir
+    print("boog")
     
     if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){
       modelsran <- read.csv("modelruntemp.csv",header = F)%>%distinct(1,.keep_all=T)
@@ -1253,7 +1299,7 @@ onclick("addtokenedit",{
     
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
     for (i in 1:length(input$modeltable_selected)){
-    path<-as.character(allmods2()[input$modeltable_selected[i],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[i],2])
     relpath <- sub("/mod.ctl","",path)
     unlink(paste0(homepath,'/',relpath,"/results"),recursive = TRUE)
     run.model(paste0(homepath,'/',relpath),basename(relpath))
@@ -1266,8 +1312,10 @@ onclick("addtokenedit",{
     
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
     for (i in 1:length(input$modeltable_selected)){
-      path<-as.character(allmods2()[input$modeltable_selected[i],2])
-      write.csv(allmods2()[-(input$modeltable_selected[i]),],"Allmodsresults.csv",row.names=F)
+      path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[i],2])
+      if(input$selecteddir=="All"){
+      write.csv(allmods2()[-(allmods2()$Number==input$modeltable_selected[i]),],"Allmodsresults.csv",row.names=F)
+      }
       relpath <- sub("/mod.ctl","",path)
       unlink(paste0(homepath,'/',relpath),recursive = TRUE)
     }
@@ -1278,7 +1326,7 @@ onclick("addtokenedit",{
   # open file explorer
   onclick("openlocation",{
   
-      path<-as.character(allmods2()[input$modeltable_selected[1],2])
+      path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
       relpath <- sub("/mod.ctl","",path)
       
       shell(gsub("/","\\\\",paste("explorer", relpath)))
@@ -1287,7 +1335,7 @@ onclick("addtokenedit",{
   
   onclick("addsimilar",{
     
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
     
     phen <- read.csv(paste0(relpath,"/mod.csv"),as.is=T)[-(1:8)]
@@ -1345,8 +1393,7 @@ onclick("addtokenedit",{
     var values = [];
      for (var i = 0 ; i<idx.length; i++){
       values.push(table.table().column(0).data()[idx[i]])
-     }
-    alert(values);", # get the index of selected items
+     }", # get the index of selected items
     "var DT_id = table.table().container().parentNode.id;", # get the output id of DT
     "Shiny.onInputChange('modeltable' + '_selected', values);", # send the index to input$outputid_selected
     "})"
@@ -1597,7 +1644,7 @@ onclick("addtokenedit",{
   
   
   onclick("savecontrol",{
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     x<- input$editcontrol
     writeLines(x,paste0(path))
     })
@@ -1607,7 +1654,7 @@ onclick("addtokenedit",{
   observeEvent(input$editmod, {
     
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA/"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     file <-paste0(homepath,"/",path)
     if (file.exists(file)){
       updateTextAreaInput(session,"editcontrol",value=paste(readLines(file),collapse = "\n"))
@@ -1655,7 +1702,7 @@ onclick("addtokenedit",{
   
   output$thetas <- renderTable({
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
       
     a<-readLines(paste0(homepath,"/",relpath,"/results/raw_results_structure"))[-1]
@@ -1700,7 +1747,7 @@ onclick("addtokenedit",{
   
   output$omegas <- renderTable({
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
     
     a<-readLines(paste0(homepath,"/",relpath,"/results/raw_results_structure"))[-1]
@@ -1745,7 +1792,7 @@ onclick("addtokenedit",{
   
   output$sigmas <- renderTable({
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
     
     a<-readLines(paste0(homepath,"/",relpath,"/results/raw_results_structure"))[-1]
@@ -1790,7 +1837,7 @@ onclick("addtokenedit",{
   
   output$regress <- renderTable({
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
     
     
@@ -1836,7 +1883,7 @@ onclick("addtokenedit",{
     
     xpose.runno <- '1'
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    path<-as.character(allmods2()[input$modeltable_selected[1],2])
+    path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
     relpath <- sub("/mod.ctl","",path)
     working.directory <- paste0(homepath,'/',relpath)
     setwd(working.directory)
@@ -1878,7 +1925,7 @@ onclick("addtokenedit",{
           {
             xpose.runno <- '1'
             homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-            path<-as.character(allmods2()[input$modeltable_selected[1],2])
+            path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
             relpath <- sub("/mod.ctl","",path)
             working.directory <- paste0(homepath,'/',relpath)
             setwd(working.directory)
@@ -1897,7 +1944,7 @@ onclick("addtokenedit",{
           {
             xpose.runno <- '1'
             homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-            path<-as.character(allmods2()[input$modeltable_selected[1],2])
+            path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
             relpath <- sub("/mod.ctl","",path)
             working.directory <- paste0(homepath,'/',relpath)
             setwd(working.directory)
@@ -1915,7 +1962,7 @@ onclick("addtokenedit",{
           {
             xpose.runno <- '1'
             homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-            path<-as.character(allmods2()[input$modeltable_selected[1],2])
+            path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
             relpath <- sub("/mod.ctl","",path)
             working.directory <- paste0(homepath,'/',relpath)
             setwd(working.directory)
@@ -1933,7 +1980,7 @@ onclick("addtokenedit",{
           {
             xpose.runno <- '1'
             homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-            path<-as.character(allmods2()[input$modeltable_selected[1],2])
+            path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
             relpath <- sub("/mod.ctl","",path)
             working.directory <- paste0(homepath,'/',relpath)
             setwd(working.directory)
@@ -1951,7 +1998,7 @@ onclick("addtokenedit",{
           {
             xpose.runno <- '1'
             homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-            path<-as.character(allmods2()[input$modeltable_selected[1],2])
+            path<-as.character(allmods2()[allmods2()$Number==input$modeltable_selected[1],2])
             relpath <- sub("/mod.ctl","",path)
             working.directory <- paste0(homepath,'/',relpath)
             setwd(working.directory)
