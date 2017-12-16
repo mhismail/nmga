@@ -142,9 +142,14 @@ button#viewmod {
 
 .btn{border-radius: 0}
 
+
 .modal.in .modal-dialog {
 	width: 99%;
 	margin-top:5px
+}
+
+.modal-sm {
+	width: 30% !important;
 }
 
 .col-sm-6:first-of-type {

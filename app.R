@@ -224,7 +224,7 @@ crossover<- function(selectedmods,ncrossoverpoints){
   offspring <- list()
   
   for (i in 1:(n/2)){
-    mate1i <-  read.csv(paste0(mate1[i],"/mod.csv"),as.is = T)[-(1:9)] #drop col 1:8, phenotype is 8+
+    mate1i <-  read.csv(paste0(mate1[i],"/mod.csv"),as.is = T)[-(1:9)] #drop col 1:9, phenotype is 9+
     mate2i <-  read.csv(paste0(mate2[i],"/mod.csv"),as.is = T)[-(1:9)]
     
     #Create two off springs for each pair and store in list
@@ -255,8 +255,6 @@ mutation <- function (crossoveredmods, alltokens, options= list(pmutation=.05)){
     gene <- names(crossoveredmods)[i]
     for (j in  1:dim(crossoveredmods)[1]){
       if(runif(1)<=pmutation){
-        print(gene)
-        print(unique(filter(alltokens,tokengroup==gene)$tokenset))
         crossoveredmods[j,i]<- sample(unique(filter(alltokens,tokengroup==gene)$tokenset),1)
       }
     }
@@ -348,16 +346,58 @@ retrieveresults <- function(directory){
     }
 }
 
+fitness <- function (results = data.frame(),
+                     THETA=5,
+                     ETA=5,
+                     EPS=5,
+                     cov.success=-10,
+                     min.success=-10,
+                     cov.warnings=0,
+                     boundary=0,
+                     rounding=0,
+                     zero.grad=0,
+                     final.zero.grad=0,
+                     hessian.reset=0,
+                     s.singular=0,
+                     sig.digs=0,
+                     condition.number=0
+                     ){
+  # variables available for fitness:
+  # results$ NTHETA,NETA,NEPS, ofv, covariance_step_run,	
+  #          minimization_successful,covariance_step_successful,
+  #          covariance_step_warnings,	estimate_near_boundary,
+  #          rounding_errors,	zero_gradients,	final_zero_gradients,
+  #          hessian_reset,	s_matrix_singular,	significant_digits,
+  #          condition_number
+
+  results$ofv+
+    THETA*results$NTHETA+
+    ETA*results$NETA+
+    EPS*results$NEPS+
+    cov.success*results$covariance_step_successful+
+    min.success*results$minimization_successful+
+    cov.warnings*results$covariance_step_warnings+
+    boundary*results$estimate_near_boundary+
+    rounding*results$rounding_errors+
+    zero.grad*results$zero_gradients+
+    final.zero.grad*results$final_zero_gradients+
+    hessian.reset*results$hessian_reset+
+    s.singular*results$s_matrix_singular
+    # sig.digs*results$significant_digits
+    # condition.number*results$condition_number
+}
+
 # this version of retrieve results is used in the GA portion of the interface,
 #  as well as user created subdirectories outside of "All".
 retrieveresultseach <- function(directory){
   pheni <- read.csv(paste0(directory,"/mod.csv"),as.is = T,stringsAsFactors = F)
   if (file.exists(paste0(directory,"/results/raw_results_mod.csv"))){
     results<- read.csv(paste0(directory,"/results/raw_results_mod.csv"),as.is = T,stringsAsFactors = F)
+
     pheninew <- mutate(pheni, OFV=results$ofv[1],
                        S=results$minimization_successful[1],
                        C=results$covariance_step_successful[1],
-                       Fitness=OFV+NTHETA*5+NETA*5+NEPS*5-C*5-S*10)
+                       Fitness=fitness(cbind(results,pheni)))
     if (!(identical(pheninew,pheni))) write.csv(pheninew,paste0(directory,"/mod.csv"),row.names = F)
     pheni <- pheninew
     
@@ -1689,7 +1729,54 @@ onclick("addtokenedit",{
                                                             tabPanel("PsN",
                                                                      actionButton("runvpc2","VPC"))))),
                                   column(12,radioGroupButtons("selectedgen",NULL,choices = c(1,2),selected = NULL))),easyClose = T)
+  # GA settings modal -------------------------------------------------------
+  GAsettingsmodal <- modalDialog(fluidPage(
+    radioGroupButtons("settingsselect",
+                      choices = c("Fitness","Selection","Crossover","Mutation")),
+    div(id = "Fitness",
+        class = "GA-settings-div",
+        numericInput("THETA","Theta Penalty",value = 5,width = "60%"),
+        numericInput("ETA","Eta Penalty",value = 5,width = "60%"),
+        numericInput("EPS","Epsilon Penalty",value = 5,width = "60%"),
+        numericInput("covsuccess","Successful Covariance",value = -10,width = "60%"),
+        numericInput("minsuccess","Successful Minimization",value = -10,width = "60%")
+        
+#         numericInput("covwarn","Covariance Warning",value = 0),
+#         numericInput("boundary","Parameter/s Near Boundary",value = 0),
+#         numericInput("rounding","Rounding Errors",value = 0),
+#         numericInput("zerograd","Zero Gradient",value = 0),
+#         numericInput("finalzerograd","Final Zero Gradient",value = 0),
+#         numericInput("hessianreset","Hessian Reset",value = 0),
+#         numericInput("ssingular","S-Matrix Singular",value = 0)
+        
+        ),
+    div(id = "Selection",
+        class = "GA-settings-div",
+        radioButtons("selectionmethod","Selection Algorithm",choices = c("2-Way Tournament","Scaled Roullette", "Rank Roullette"))
+    ),
+    div(id = "Crossover",
+        class = "GA-settings-div",
+        numericInput("crossoverrate","Crossover Rate",value = 0.7,min=0,max=1,width = "60%")
+    ),
+    div(id = "Mutation",
+        class = "GA-settings-div",
+        numericInput("mutationrate","Mutation Rate",value = 0.05,min=0,max=1,width = "60%")
+    )
+    ),
+    size="s",
+    class="GAsettingsmodal")
   
+  observeEvent(input$GAsettings, {
+    showModal(
+      GAsettingsmodal
+    )
+  })
+  
+  onclick("settingsselect",
+          {
+            hide(selector =  ".GA-settings-div")
+            showElement(id=input$settingsselect)
+          })
   
   
   # Edit control stream modal -----------------------------------------------
@@ -1758,6 +1845,8 @@ onclick("addtokenedit",{
       
       
     })
+
+
 
   
    # Parameter tables --------------------------------------------------------
