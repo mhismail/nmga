@@ -117,8 +117,6 @@ create.model<- function(controlstream,alltokens,phenotype,tokengroups){
     maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]]) 
     maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T) 
     print(maxeta)
-    
-    
   } 
   x<- gsub("ALLETAS",paste0("ETA",1:maxeta,collapse = " "),x)
   return(x) 
@@ -330,21 +328,7 @@ randomnextGA <- function (nmods,nindiv){
   return(maxgen+1) #return new max \gen to update buttons
 }
 
-# retrieve results if results directory exists. returns dataframe with model number,
-#  OFV, run success status, and covariance success status
-#  this version of retrieveresults is used for the "Allmods" section
-retrieveresults <- function(directory){
-  if (file.exists(paste0(directory,"/results/raw_results_mod.csv"))){
-    results<- read.csv(paste0(directory,"/results/raw_results_mod.csv"),as.is = T,stringsAsFactors = F)
-    results <- data.frame(Number=sub(".*mod([0-9]+).*","\\1",directory),
-                          OFV=results$ofv[1],
-                    S=results$minimization_successful[1],
-                    C=results$covariance_step_successful[1])
-    return(results)
-    
 
-    }
-}
 
 fitness <- function (results = data.frame(),
                      THETA=5,
@@ -385,6 +369,22 @@ fitness <- function (results = data.frame(),
     s.singular*results$s_matrix_singular
     # sig.digs*results$significant_digits
     # condition.number*results$condition_number
+}
+
+# retrieve results if results directory exists. returns dataframe with model number,
+#  OFV, run success status, and covariance success status
+#  this version of retrieveresults is used for the "Allmods" section
+retrieveresults <- function(directory){
+  if (file.exists(paste0(directory,"/results/raw_results_mod.csv"))){
+    results<- read.csv(paste0(directory,"/results/raw_results_mod.csv"),as.is = T,stringsAsFactors = F)
+    results <- data.frame(Number=sub(".*mod([0-9]+).*","\\1",directory),
+                          OFV=results$ofv[1],
+                          S=results$minimization_successful[1],
+                          C=results$covariance_step_successful[1])
+    return(results)
+    
+    
+  }
 }
 
 # this version of retrieve results is used in the GA portion of the interface,
@@ -676,7 +676,7 @@ server <- function(input, output,session) {
   #these varaibles are used to trigger next generation when no more model tasks are found to be running
   invalidate <- reactiveValues(nextGA=1,future=1)
   
-  
+  #copy model to new directory when dragged
   observe({
     copy.model(input$draggedfile[2],input$draggedfile[1],control=input$ace,alltokens=alltokens,allmods=allmods)
   })
@@ -1075,7 +1075,6 @@ onclick("addtokenedit",{
           
           tokensetlist<- filter(alltokens,tokengroup==input$tokengroupinput)$tokenset%>%as.character()
           updateAwesomeRadio(session,inputId = "tokensetinput",choices =unique(tokensetlist),selected =unique(tokensetlist)[1])
-          
 
           tokenlist<- filter(alltokens,tokenset==unique(tokensetlist)[1])$token%>%as.character()
           updateAwesomeRadio(session,inputId = "tokeninput",choices =as.character(tokenlist),selected = NULL)
@@ -1269,10 +1268,12 @@ onclick("addtokenedit",{
   onclick("refreshmods",{
     
     #delete models folder if it exists
-    unlink("models",force = TRUE,recursive = T)
+    unlink("models/All",force = TRUE,recursive = T)
     
     #create new models folder
-    dir.create("models")
+    if (!dir.exists("models")){
+      dir.create("models")
+    }
     dir.create("models/All")
     
     allmods <- allcombos(alltokens)
@@ -1518,6 +1519,9 @@ onclick("addtokenedit",{
                                                         tabPanel("Plots",
                                                                  bsCollapse(bsCollapsePanel("Covariate Model",
                                                                  actionButton("ranparvscov","ETAs vs Covariates"),
+                                                                 actionButton("parvscov","Parameters vs Covariates"),
+                                                                 actionButton("parvspar","Parameters vs Parameters"),
+                                                                 
                                                                  actionButton("covscatter","Covariate Scatter Plots")),
                                                                  bsCollapsePanel("Goodness of Fit",
                                                                                  actionButton("basicgof","Basic GOF"),
@@ -2057,13 +2061,11 @@ onclick("addtokenedit",{
     k=0
     all <- list()
     for (i in xpdb@Prefs@Xvardef$parms){
-      y <- select_(xpdb@Data,i)
+      y <- distinct(xpdb@Data,ID,.keep_all=T)%>%select_(i)
       for (j in xpdb@Prefs@Xvardef$covariates){
-        x <- select_(xpdb@Data,j)
+        x <- distinct(xpdb@Data,ID,.keep_all=T)%>%select_(j)
         if(!is.factor(x[,1])){
           k=k+1
-          print(x)
-          print(y)
           
           a<-rbind(linmod(center(x[,1]),as.numeric(as.character(y[,1])),xlab=names(x),ylab=names(y)),
                    expmod(center(x[,1]),as.numeric(as.character(y[,1])),xlab=names(x),ylab=names(y)),
@@ -2105,6 +2107,46 @@ onclick("addtokenedit",{
             setwd(homepath)
           })
   
+  onclick("parvscov",
+          {
+            xpose.runno <- '1'
+            homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"\
+            all <- allmods2()
+            
+            path<-as.character(all[all$Number==input$modeltable_selected[1],2])
+            relpath <- sub("/mod.ctl","",path)
+            working.directory <- paste0(homepath,'/',relpath)
+            setwd(working.directory)
+            pdf.filename <- paste0('parvscov.pdf')
+            pdf.title <- 'execute diagnostic plots run 1'
+            xpdb<-xpose.data(xpose.runno)
+            pdf(file=pdf.filename,width=10,height=7,title=pdf.title)
+            print(parm.vs.cov(xpdb))
+            dev.off()
+            shell("parvscov.pdf",wait = F)
+            setwd(homepath)
+          })
+  
+  onclick("parvspar",
+          {
+            xpose.runno <- '1'
+            homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"\
+            all <- allmods2()
+            
+            path<-as.character(all[all$Number==input$modeltable_selected[1],2])
+            relpath <- sub("/mod.ctl","",path)
+            working.directory <- paste0(homepath,'/',relpath)
+            setwd(working.directory)
+            pdf.filename <- paste0('parvspar.pdf')
+            pdf.title <- 'execute diagnostic plots run 1'
+            xpdb<-xpose.data(xpose.runno)
+            pdf(file=pdf.filename,width=10,height=7,title=pdf.title)
+            print(parm.vs.parm(xpdb))
+            dev.off()
+            shell("parvspar.pdf",wait = F)
+            setwd(homepath)
+          })
+  
   #Basic Goodness of fit - (DV vs POPPRED, DV vs IPRED, |IWRES| vs DV, CWRES vs Time)
   onclick("basicgof",
           {
@@ -2140,7 +2182,7 @@ onclick("addtokenedit",{
             pdf.title <- 'execute diagnostic plots run 1'
             xpdb<-xpose.data(xpose.runno)
             pdf(file=pdf.filename,width=10,height=7,title=pdf.title)
-            print(ind.plots(xpdb))
+            print(ind.plots(xpdb,logy=T))
             dev.off()
             shell("indplots.pdf",wait = F)
             setwd(homepath)
