@@ -218,6 +218,7 @@ crossover<- function(selectedmods,ncrossoverpoints){
   sample <-sample(n,n/2)
   mate1 <- selectedmods [sample]
   mate2 <- selectedmods [-sample]
+  print(selectedmods)
 
   offspring <- list()
   
@@ -242,12 +243,13 @@ crossover<- function(selectedmods,ncrossoverpoints){
   #list of offspring to df
   alloffspring <- data.frame()
   alloffspring<- rbind(alloffspring, do.call(rbind, offspring))
+  print(alloffspring)
   return(alloffspring)
   
   
 }
 
-mutation <- function (crossoveredmods, alltokens, options= list(pmutation=.05)){
+mutation <- function (crossoveredmods, alltokens, options= list(pmutation=.07)){
   pmutation <- options$pmutation
   for (i in 1:dim(crossoveredmods)[2]){
     gene <- names(crossoveredmods)[i]
@@ -263,6 +265,7 @@ mutation <- function (crossoveredmods, alltokens, options= list(pmutation=.05)){
 
 initiateGA <- function (nmods,nindiv,control=NULL,alltokens=NULL,allmods=NULL){
   if (nindiv > nmods) nindiv = nmods
+  set.seed(141)
   pop <- sample(1:nmods,nindiv,replace=F)
   popmods <- paste0("models/All/mod",pop)
   for (i in popmods){
@@ -1540,7 +1543,6 @@ onclick("addtokenedit",{
                                                                             multiple = T,
                                                                             open=c("Structural (THETA)","IIV (OMEGA)","RUV (SIGMA)"))),
                                                         tabPanel("Covariate Model",
-                                                                 tableOutput("regress"),
                                                                  tableOutput("regress.parms")),
                                                         tabPanel("PsN",
                                                                  actionButton("runvpc","VPC")))))),easyClose = T)
@@ -1996,50 +1998,8 @@ onclick("addtokenedit",{
     SIGMATBL
   },rownames=T)
   
-  output$regress <- renderTable({
-    homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
-    all <- allmods2()
-    
-    path<-as.character(all[all$Number==input$modeltable_selected[1],2])
-    relpath <- sub("/mod.ctl","",path)
-    
-    
-    
-    cotab<-read.table(paste0(relpath,"/cotab1"),skip = 1,header=T,stringsAsFactors = F)%>%distinct(ID,.keep_all = T)
-    catab<-read.table(paste0(relpath,"/catab1"),skip = 1,header=T,stringsAsFactors = F)%>%distinct(ID,.keep_all = T)
-    patab <- read.table(paste0(relpath,"/patab1"),skip = 1,header=T,stringsAsFactors = F)%>%distinct(ID,.keep_all = T)
-    
-    ETAS <- names(patab)[grepl("ETA",names(patab))]
-    CO<- names(cotab)[!(grepl("ID",names(cotab)))]
-    CA <- names(catab)[!(grepl("ID",names(catab)))]
-    
-    etatab <- patab[c(1,which(grepl("ETA",names(patab))))]
-    
-    alltab <- right_join(cotab,catab)%>%right_join(etatab)
+  
 
-    
-    
-    k = 0
-    corlist <- list()
-    for (i in ETAS){
-      ETAi <- which(names(alltab)==i)
-      for (j in CO){
-        k=k+1
-        PARAMi <- which(names(alltab)==j)
-        cor <- lm (alltab[,ETAi]~alltab[,PARAMi])
-        corlist[[k]]<-(c(R="Linear",
-                         Model=paste0(j,"on",i),
-                         Estimate =round(as.numeric(cor[[1]][2]),3), 
-                         STDError = round(as.numeric(coef(summary(cor))[, 2][2] ),3)))
-      }
-    } 
-    
-    allcor<-data.frame()
-    
-    allcor<- rbind(allcor, do.call(rbind, corlist))
-    
-
-  },rownames=F)
   
   output$regress.parms <- renderTable({
 
