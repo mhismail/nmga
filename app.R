@@ -15,8 +15,13 @@ if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("foreach")) install.packages("foreach")
 if (!require("doSNOW")) install.packages("doSNOW")
 if (!require("future")) install.packages("future")
+if (!require("pkga")){
+  if (!require("devtools")) install.packages("devtools")
+  library(devtools)
+  install("pkga")
+  library(pkga)
+}
 
-library("pkga")
 
 
 #Set plot theme
