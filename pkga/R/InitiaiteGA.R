@@ -51,7 +51,9 @@ NextGA <- function (alltokens,control=NULL,allmods=NULL){
   b<-crossover(a,2)
   c <- mutation(b,alltokens)
   
-  modlookup <- read.csv("allmods.csv")
+  modlookup <- read.csv("Allmodsresults.csv",as.is=T)[-2:-9]
+  names(modlookup)[1]<- "X"
+  print(head(modlookup))
   newmodnumbers <- merge(modlookup,c)$X
   newmods <-  paste0("models/All/mod",newmodnumbers)
   print(currentgen)
@@ -65,8 +67,9 @@ NextGA <- function (alltokens,control=NULL,allmods=NULL){
       
       best <- unique(filter(allmods1, Fitness<=nthmin(allmods1$Fitness,2))$Number)
       best_path <-  paste0("models/All/mod",best)
-      
+      print(newmods)
       replace <- sample(1:length(newmods),2,replace = F)
+
       newmods[replace]<-best_path
       
     }
@@ -142,9 +145,12 @@ NextGA <- function (alltokens,control=NULL,allmods=NULL){
     b<-crossover(a,2)
     c <- mutation(b,alltokens)
     
-    modlookup <- read.csv("allmods.csv")
+    modlookup <-read.csv("Allmodsresults.csv",as.is=T)[-2:-9]
+    names(modlookup)[1]<- "X"
+    
     newmodnumbers <- merge(modlookup,c)$X
     newmods <-  paste0("models/All/mod",newmodnumbers)
+    print(newmods)
     replace <- sample(1:length(newmods),1)
     newmods[replace]<-best_path
     
