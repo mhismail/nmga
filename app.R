@@ -167,7 +167,7 @@ ui <- fluidPage(
                                     column(7,
                                            grVizOutput("distributiondiagram")))
                        ))), class="token-div-holder"
-  ),
+         ),
   HTML('
        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
        integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
@@ -184,9 +184,10 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 
 server <- function(input, output,session) {
-  #these varaibles are used to trigger next generation when no more model tasks are found to be running
-  invalidate <- reactiveValues(nextGA=1,future=1)
   
+  #these varaibles are used to trigger next generation when no more model tasks are found to be running
+  invalidate <- reactiveValues(nextGA=1,
+                               future=1)
   
   
   #copy model to new directory when dragged
@@ -196,8 +197,14 @@ server <- function(input, output,session) {
   
   
   # Define globals
-  alltokens <-data.frame(tokengroup= character(0), tokenset= character(0), token = character(0), stringsAsFactors=FALSE)
-  GAProgress <- data.frame (Generation = numeric(0), Fitness = numeric(0))
+  alltokens <-data.frame(tokengroup= character(0), 
+                         tokenset= character(0), 
+                         token = character(0), 
+                         stringsAsFactors=FALSE)
+  
+  GAProgress <- data.frame (Generation = numeric(0), 
+                            Fitness = numeric(0))
+  
   f <- NULL
   
   
@@ -220,10 +227,11 @@ server <- function(input, output,session) {
     
     if (file.exists("alltokens.csv")){
       alltokens <- read.csv("alltokens.csv",as.is=T)
-    }else({alltokens <-data.frame(tokengroup= character(0), tokenset= character(0), token = character(0), stringsAsFactors=FALSE)})
+    }
     
-    if (file.exists("allmods.csv")){
-      allmods <<- read.csv("allmods.csv",as.is=T)[-1] #model phenotypes
+    if (file.exists("Allmodsresults.csv.gz")){
+      zz=gzfile('Allmodsresults.csv.gz')   
+      allmods <<- read.csv(zz)[-1:-9] #model phenotypes
     }
     print(directory)
     runjs({
@@ -415,7 +423,7 @@ server <- function(input, output,session) {
                         , {
                         color: '#ff1b0f',
                         words: []
-          }]
+                        }]
           });")
           
             
@@ -827,8 +835,6 @@ server <- function(input, output,session) {
     dir.create("models/All")
     
     allmods <- AllCombos(alltokens)
-    write.csv(allmods,"allmods.csv")
-    # write.csv(data.frame("Number","Path","OFV","Fitness","S","C","NTHETA","NETA",names(allmods)),"allmodsresults.csv")
     
     allmods[] <- lapply(allmods, as.character) 
     allmods <<- allmods # define allmods globally
@@ -849,7 +855,11 @@ server <- function(input, output,session) {
     nmods <- dim(allmods)[1]
     a <- cbind(data.frame(Number=1:nmods,Path=paste0("models/All/mod",1:nmods,"/mod.ctl"),OFV="",Fitness="",S="",C="",NTHETA="",NETA="",NEPS="",allmods))
     
-    write.csv(a,"Allmodsresults.csv",row.names = F)
+    
+    gz1 <- gzfile("Allmodsresults.csv.gz", "w")
+    write.csv(a, gz1,row.names=F)
+    close(gz1)
+    # write.csv(a,"Allmodsresults.csv",row.names = F)
   })
   
   
@@ -863,8 +873,9 @@ server <- function(input, output,session) {
     selecteddir <- input$selecteddir
     
     if (selecteddir=="All"){
-      
-      allmodsresults <- read.csv("Allmodsresults.csv")
+      zz=gzfile('Allmodsresults.csv.gz')   
+      allmodsresults <- read.csv(zz)
+      # allmodsresults <- read.csv("Allmodsresults.csv")
       
       #if (models have been run since laste refresh)
       if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){ 
@@ -886,7 +897,12 @@ server <- function(input, output,session) {
           # value in mods. na.omit removes na values. 1,3,5,6 are columns to be updated
           # right side !is.na is safegaurd for models that were run but have since been deleted before results were fetched
           allmodsresults[na.omit(match(mods,allmodsresults$Number)),c(1,3,5,6)] <- resultsdf[!is.na(match(mods,allmodsresults$Number)),]
-          write.csv(allmodsresults,"Allmodsresults.csv",row.names = F)
+          
+          gz1 <- gzfile("Allmodsresults.csv.gz", "w")
+          write.csv(a, gz1,row.names = F)
+          close(gz1)
+          
+          # write.csv(allmodsresults,"Allmodsresults.csv",row.names = F)
         }
         
       }
@@ -917,7 +933,7 @@ server <- function(input, output,session) {
     
     
     
-  })
+    })
   
   
   
@@ -974,7 +990,9 @@ server <- function(input, output,session) {
     relpath <- sub("/mod.ctl","",path)
     
     phen <- read.csv(paste0(relpath,"/mod.csv"),as.is=T)[-(1:9)]
-    allmods <- read.csv("allmods.csv",as.is=T)[-1]
+    zz=gzfile('Allmodsresults.csv.gz')   
+    allmods <- read.csv(zz)[-1:-9]
+    # allmods <- read.csv("Allmodsresults.csv",as.is=T)[-1:-9]
     
     similarmods <- which(apply(allmods, 1, function(x) sum( x ==phen)>=(dim(allmods)[2]-1)))
     
