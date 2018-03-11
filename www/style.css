@@ -119,25 +119,25 @@ button#viewmod:hover {
 }
 
 button#viewmod {
-	position: absolute;
-	margin: 0 auto;
-	left: 0;
-	right: 0;
-	width: 105px;
-	height: 40px;
-	z-index: 1000;
-	border-top: none;
-	border-radius: 20px;
-	border-top-left-radius: 0;
-	border-top-right-radius: 0;
-	background: #ffffff;
-	color: black;
-	border-color: #ec0804;
-	border-width: 2px;
-	border-style: solid;
-	box-shadow: 0 0 8px;
-	border-top: none;
-	transition: height 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77), padding-top 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77);
+    position: absolute;
+    margin: 0 auto;
+    left: 0;
+    right: 0;
+    width: 105px;
+    height: 40px;
+    z-index: 1000;
+    border-top: none;
+    border-radius: 10px;
+    border-top-left-radius: 0;
+    border-top-right-radius: 0;
+    background: linear-gradient(#f3f3f3,white);
+    color: black;
+    border-color: #464545;
+    border-width: 2px;
+    border-style: solid;
+    box-shadow: 0 0 8px;
+    border-top: none;
+    transition: height 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77), padding-top 0.2s cubic-bezier(0.2, 0.13, 0.65, 0.77);
 }
 
 .btn{border-radius: 0}
@@ -153,7 +153,7 @@ button#viewmod {
 }
 
 .col-sm-6:first-of-type {
-	border-right: dashed 2px #2d2d2d;
+
 	z-index: 100;
 }
 
@@ -165,7 +165,7 @@ div#tokentype {
 	box-shadow: 0px 0px 0px #000;
 	margin: 10px 0 10px 0;
 	padding: 10px;
-	border: #c0c0d6 2px dashed;
+
 }
 
 .tokeneditdiv {
@@ -227,3 +227,36 @@ button.btn.radiobtn.btn-default.active {
 .radio-bs label::after{
 	display:none
 }
+
+
+.container-fluid{
+	padding: 0;
+}
+
+.nav-bar{
+	background: linear-gradient(#e6e6e6,#bbbcbd);
+	font-size: 0px;
+}
+
+.nav-bar-el{
+    display: inline-block;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    padding: 0px 10px;
+    margin: 3px 0;
+    color: #636363;
+    border-left: #c1bfbf 1px solid;
+    white-space-collapsing: discard;
+    font-size: 15px;
+    cursor: pointer;
+}  
+
+span.nav-bar-el:hover {
+    color: white;
+}     
+
+i{
+	vertical-align: middle;
+}
+

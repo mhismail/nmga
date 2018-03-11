@@ -32,12 +32,14 @@ theme_set(theme_bw())
 # UI ----------------------------------------------------------------------
 ui <- fluidPage(
   useShinyjs(), 
-  
+  column(12,
+         span(icon("save","fa-2x"),id="saveproj",class=c("nav-bar-el")),
+         span(icon("folder-open","fa-2x"),id="dir",class=c("nav-bar-el")),
+         span("Directory",id="proj",class=c("nav-bar-el")),
+         class="nav-bar"),
   actionButton("viewmod","View Models"),
   column(6,
-         column(12,offset=2,
-                actionButton("loadproj","Choose directory"),
-                actionButton("saveproj","Save Project")),
+
          tabsetPanel(id="tabs",tabPanel("Control Stream",
                                         textAreaInput("ace",
                                                       label = NULL,
@@ -118,13 +120,20 @@ ui <- fluidPage(
                                        <h4 id='covrequiredtheta'>$THETA</h4>"),
                                   class="required-holder")
                        ),
-                       div(id = "ETA",
-                           class = "tokentype",
-                           checkboxGroupButtons("etatypes",
-                                                "Select IIV relationships",
-                                                choices= c("None","Normal","Logarithmic","Normal (Proportional)") ),
-                           actionButton("addetas",
-                                        "Add Selected Token Sets")
+                           div(id = "ETA",
+                               
+                               class = "tokentype",
+                               column(6,
+                               checkboxGroupButtons("etatypes",
+                                                    "Select IIV relationships",
+                                                    choices= c("None","Normal","Logarithmic","Normal (Proportional)") ),
+                               actionButton("addetas",
+                                            "Add Selected Token Sets")),
+                           column(6,
+                                  "Required {Token Group} in:", 
+                                  HTML("<h4 id='etarequiredpk'>$PK</h4>
+                                       <h4 id='etarequiredomega'>$OMEGA</h4>"),
+                                  class="required-holder")
                            
                        ),
                        div(id = "EPS",
@@ -193,17 +202,21 @@ server <- function(input, output,session) {
   
   
   
-  onclick("loadproj",{
-    setwd(choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\"))
-    updateTextAreaInput(session,
-                        inputId = "ace",
-                        value=paste(readLines(list.files(pattern = ".*.ctl")),
-                                    collapse = "\n"))
+  onclick("dir",{
+    directory <-choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
+    setwd(directory)
+    if(length(list.files(pattern = ".*.ctl"))>0){
+      updateTextAreaInput(session,
+                          inputId = "ace",
+                          value=paste(readLines(list.files(pattern = ".*.ctl")[1]),
+                                      collapse = "\n"))
+      updateTextAreaInput(session,
+                          inputId = "preview",
+                          value=paste(readLines(list.files(pattern = ".*.ctl")[1]),
+                                      collapse = "\n")) 
+    }
     
-    updateTextAreaInput(session,
-                        inputId = "preview",
-                        value=paste(readLines(list.files(pattern = ".*.ctl")),
-                                    collapse = "\n")) 
+
     
     if (file.exists("alltokens.csv")){
       alltokens <- read.csv("alltokens.csv",as.is=T)
@@ -212,7 +225,22 @@ server <- function(input, output,session) {
     if (file.exists("allmods.csv")){
       allmods <<- read.csv("allmods.csv",as.is=T)[-1] #model phenotypes
     }
+    print(directory)
+    runjs({
+      paste("$('#proj').text('Current Directory:",basename(directory),"')")
+    })
+
   })
+  
+  onclick("proj",{
+    shell(gsub("/","\\\\",paste("explorer", getwd())))
+    
+    
+  }
+    
+  )
+  
+
   
   
   # Saving and loading projects ---------------------------------------------
@@ -293,6 +321,8 @@ server <- function(input, output,session) {
     
     PKblock <- gsub(".*\\$PK(.*?)\\$.*","\\1",x) # Text between $PK and next $
     THETAblock <- gsub(".*\\$THETA(.*?)\\$.*","\\1",x) # Text betwen $THETA and $
+    OMEGAblock <- gsub(".*\\$OMEGA(.*?)\\$.*","\\1",x) # Text betwen $OMEGA and $
+    
     
     if(grepl(selectedtokengroup,PKblock)|grepl(selectedtokengroupnumbered,PKblock)){
       removeClass("covrequiredpk","red")
@@ -307,6 +337,20 @@ server <- function(input, output,session) {
     }else{
       removeClass("covrequiredtheta","green")
       addClass("covrequiredtheta","red")}
+    
+    if(grepl(selectedtokengroup,PKblock)|grepl(selectedtokengroupnumbered,PKblock)){
+      removeClass("etarequiredpk","red")
+      addClass("etarequiredpk","green")
+    }else{
+      removeClass("etarequiredpk","green")
+      addClass("etarequiredpk","red")}
+    
+    if(grepl(selectedtokengroup,OMEGAblock)|grepl(selectedtokengroupnumbered,OMEGAblock)){
+      removeClass("etarequiredomega","red")
+      addClass("etarequiredomega","green")
+    }else{
+      removeClass("etarequiredomega","green")
+      addClass("etarequiredomega","red")}
     
     
   },priority = 100)
