@@ -51,7 +51,9 @@ NextGA <- function (alltokens,control=NULL,allmods=NULL){
   b<-crossover(a,2)
   c <- mutation(b,alltokens)
   
-  modlookup <- read.csv("Allmodsresults.csv",as.is=T)[-2:-9]
+  zz=gzfile('Allmodsresults.csv.gz')   
+  allmodsresults <- read.csv(zz)
+  modlookup <- allmodsresults[-2:-9]
   names(modlookup)[1]<- "X"
   print(head(modlookup))
   newmodnumbers <- merge(modlookup,c)$X
