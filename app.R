@@ -31,8 +31,10 @@ theme_set(theme_bw())
 
 # UI ----------------------------------------------------------------------
 ui <- fluidPage(
-  useShinyjs(), 
+  useShinyjs(),
+  div("NMGA",class="title-bar"),
   column(12,
+         
          span(icon("save","fa-2x"),id="saveproj",class=c("nav-bar-el")),
          span(icon("folder-open","fa-2x"),id="dir",class=c("nav-bar-el")),
          span("Directory",id="proj",class=c("nav-bar-el")),
@@ -899,7 +901,7 @@ server <- function(input, output,session) {
           allmodsresults[na.omit(match(mods,allmodsresults$Number)),c(1,3,5,6)] <- resultsdf[!is.na(match(mods,allmodsresults$Number)),]
           
           gz1 <- gzfile("Allmodsresults.csv.gz", "w")
-          write.csv(a, gz1,row.names = F)
+          write.csv(allmodsresults, gz1,row.names = F)
           close(gz1)
           
           # write.csv(allmodsresults,"Allmodsresults.csv",row.names = F)

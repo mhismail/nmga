@@ -233,24 +233,30 @@ button.btn.radiobtn.btn-default.active {
 	padding: 0;
 }
 
-.nav-bar{
-	background: linear-gradient(#e6e6e6,#bbbcbd);
-	font-size: 0px;
+.nav-bar {
+    background: linear-gradient(#e6e6e6,#bbbcbd);
+    box-shadow: 1px 1px 10px 1px;
+    font-size: 0px;
+    margin-bottom: 10px;
 }
 
-.nav-bar-el{
+.nav-bar-el {
     display: inline-block;
     height: 40px;
     line-height: 40px;
     text-align: center;
     padding: 0px 10px;
     margin: 3px 0;
-    color: #636363;
+    color: #3e0000;
     border-left: #c1bfbf 1px solid;
     white-space-collapsing: discard;
-    font-size: 15px;
+    font-size: 10px;
     cursor: pointer;
-}  
+}
+
+span#proj {
+    font-size: 15px;
+}
 
 span.nav-bar-el:hover {
     color: white;
@@ -260,3 +266,9 @@ i{
 	vertical-align: middle;
 }
 
+.title-bar {
+    height: 20px;
+    padding-left: 10px;
+    color: white;
+    background: #0f922c;
+}
