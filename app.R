@@ -27,6 +27,35 @@ if (!require("pkga")){
 #Set plot theme
 theme_set(theme_bw())
 
+InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
+  results_dir <- "SCM"
+  i=1
+  if(dir.exists(results_dir)){
+  while(dir.exists(results_dir)){
+    results_dir<- paste0("SCM(",i,")")
+    if(suppressWarnings(dir.create(results_dir))){
+      break
+    }
+    i = i+1
+  }
+  }else{
+    suppressWarnings(dir.create(results_dir))
+  }
+  
+  dir.create(paste0(results_dir,"/Base"))
+  CheckThenCreate(path,control,alltokens,allmods)
+  CopyModel(path,copyTo,control,alltokens,allmods) 
+  homepath <-getwd()
+  relpath <- path
+
+  RunModel(paste0(homepath,'/',relpath),basename(relpath))
+     
+  
+  
+  write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
+} 
+
+
 
 
 # UI ----------------------------------------------------------------------
@@ -38,8 +67,12 @@ ui <- fluidPage(
          span(icon("save","fa-2x"),id="saveproj",class=c("nav-bar-el")),
          span(icon("folder-open","fa-2x"),id="dir",class=c("nav-bar-el")),
          span("Directory",id="proj",class=c("nav-bar-el")),
+         span(actionButton("viewmod","View Models",class="nav-bar-button")),
+         span(actionButton("openGA","Initiate Genetic Algorithm",class="nav-bar-button")),
+         span(actionButton("GAsettings",icon("gear","fa-2x"),class="nav-bar-button")),
+         span(actionButton("openSCM","Initiate SCM",class="nav-bar-button")),
+         span(actionButton("SCMsettings",icon("gear","fa-2x"),class="nav-bar-button")),
          class="nav-bar"),
-  actionButton("viewmod","View Models"),
   column(6,
 
          tabsetPanel(id="tabs",tabPanel("Control Stream",
@@ -59,10 +92,8 @@ ui <- fluidPage(
   column(6,
          column(12,
                 align="center",
-                actionButton("openGA",
-                             "Initiate Genetic Algorithm"),
-                actionButton("GAsettings",
-                             icon("gear","fa-2x")),
+
+                
                 radioGroupButtons("tokentype",
                                   NULL,
                                   choices = c("Covariate","ETA","EPS","Structure", "Custom"),
@@ -1270,6 +1301,7 @@ server <- function(input, output,session) {
                                                               tabPanel("PsN",
                                                                        actionButton("runvpc2","VPC"))))),
                                     column(12,radioGroupButtons("selectedgen",NULL,choices = c(1),selected = NULL))),easyClose = T)
+  
   # GA settings modal -------------------------------------------------------
   GAsettingsmodal <- modalDialog(fluidPage(
     radioGroupButtons("settingsselect",
@@ -1355,6 +1387,78 @@ server <- function(input, output,session) {
   
   
   #  ------------------------------------------------------------------------
+  
+  # SCM Modal --------------------------------------------------------
+  observeEvent(input$openSCM, {
+    showModal(
+      scm_table
+    )
+  })
+  
+  # Render table
+  output$modeltable3 <- DT::renderDataTable({
+    allmods2()
+  },
+  filter = list(position = "top"),
+  options = list(
+    select = list(style = 'os', # set 'os' select style so that ctrl/shift + click in enabled
+                  items = 'row'), # items can be cell, row or column
+    pageLength = 100,
+    dom = 'tpf', 
+    columnDefs = list(list(className = 'dt-center', targets = "_all"))),
+  rownames= FALSE, 
+  extensions = 'Select', 
+  selection="none", 
+  callback = JS(
+    "table.on( 'click.dt', 'tbody td', function (e) {", # react on click event
+    "var type = table.select.items();", # get the items setting of Select extension
+    "var idx = table[type + 's']({selected: true}).indexes().toArray();
+    var values = [];
+    for (var i = 0 ; i<idx.length; i++){
+    values.push(table.table().column(0).data()[idx[i]])
+    }", # get the index of selected items
+    "var DT_id = table.table().container().parentNode.id;", # get the output id of DT
+    "Shiny.onInputChange('modeltable' + '_selected', values);", # send the index to input$outputid_selected
+    "})"
+  ), server = T)
+  
+  scm_table <-  modalDialog(fluidPage(div(column(9,
+                                             actionButton("openlocation3","Open Model Location"),
+                                             DT::dataTableOutput('modeltable3'),
+                                             
+                                             radioGroupButtons("selecteddir3",NULL,choices = c("All"),selected = "All")
+
+                                             )),
+                                  div(column(3, tabsetPanel(id = "modelinfo3",
+                                                            tabPanel("Plots3",
+                                                                     bsCollapse(bsCollapsePanel("Covariate Model",
+                                                                                                actionButton("ranparvscov3","ETAs vs Covariates"),
+                                                                                                actionButton("parvscov3","Parameters vs Covariates"),
+                                                                                                actionButton("parvspar3","Parameters vs Parameters"),
+                                                                                                
+                                                                                                actionButton("covscatter3","Covariate Scatter Plots")),
+                                                                                bsCollapsePanel("Goodness of Fit",
+                                                                                                actionButton("basicgof3","Basic GOF"),
+                                                                                                actionButton("indplots3","Individual Plots"),
+                                                                                                actionButton("dvpredipred3","DV vs Pred, IPRED")),
+                                                                                multiple = T,open=c("Covariate Model"))
+                                                            ),
+                                                            tabPanel("Parameters3",
+                                                                     bsCollapse(bsCollapsePanel("Structural (THETA)",
+                                                                                                tableOutput("thetas3")
+                                                                     ),
+                                                                     bsCollapsePanel("IIV (OMEGA)",
+                                                                                     tableOutput("omegas3")),
+                                                                     bsCollapsePanel("RUV (SIGMA)",
+                                                                                     tableOutput("sigmas3")),
+                                                                     multiple = T,
+                                                                     open=c("Structural (THETA)","IIV (OMEGA)","RUV (SIGMA)"))),
+                                                            tabPanel("Covariate Model",
+                                                                     tableOutput("regress.parms3")),
+                                                            tabPanel("PsN3",
+                                                                     actionButton("runvpc3","VPC")))))),easyClose = T)
+  
+ # ---------------------------------------------------------------------
   
   datafile <- reactive({
     x<- input$ace
@@ -1723,6 +1827,9 @@ server <- function(input, output,session) {
             setwd(homepath)
           })
   }
+
+#  ------------------------------------------------------------------------
+
 
 # Run the application 
 shinyApp(ui = ui, server = server)
