@@ -9,16 +9,19 @@
 #' @export
 
 CopyModel <- function (copy,copyTo,control=NULL,alltokens=NULL,allmods=NULL){
-  
+  print(copyTo)
   if(!is.null(copyTo)){
     CheckThenCreate(copy,control,alltokens,allmods)
-    if(copyTo %in% list.dirs(paste0(getwd(),"/models/"),recursive = F,full.names = F)){
-      file.copy(copy, paste0("models/",copyTo), recursive=TRUE)
+    print(copyTo)
+    print("woog2")
+    if(dir.exists(copyTo)){
+      print("woog")
+      file.copy(copy, paste0(copyTo), recursive=TRUE)
       
       mod <-read.csv(paste0(copy,"/mod.csv"),as.is=T)
       i <- mod$Number[1]
-      a <-mutate(mod,Path=paste0("models/",copyTo,"/mod",i,"/mod.ctl"))
-      write.csv(a,paste0("models/",copyTo,"/mod",i,"/mod.csv"),row.names = F)
+      a <-mutate(mod,Path=paste0(copyTo,"/mod",i,"/mod.ctl"))
+      write.csv(a,paste0(copyTo,"/mod",i,"/mod.csv"),row.names = F)
     }
   }
 }

@@ -42,17 +42,18 @@ InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
     suppressWarnings(dir.create(results_dir))
   }
   
-  dir.create(paste0(results_dir,"/Base"))
+  copyTo<- paste0(results_dir,"/Base")
+  dir.create(copyTo)
   CheckThenCreate(path,control,alltokens,allmods)
   CopyModel(path,copyTo,control,alltokens,allmods) 
-  homepath <-getwd()
-  relpath <- path
-
-  RunModel(paste0(homepath,'/',relpath),basename(relpath))
-     
-  
-  
-  write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
+#   homepath <-getwd()
+#   relpath <- path
+# 
+#   RunModel(paste0(homepath,'/',relpath),basename(relpath))
+#      
+#   
+#   
+#   write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
 } 
 
 
@@ -225,8 +226,13 @@ server <- function(input, output,session) {
   
   #copy model to new directory when dragged
   observe({
-    CopyModel(input$draggedfile[2],input$draggedfile[1],control=input$ace,alltokens=alltokens,allmods=allmods)
-  })
+    if(!is.null(input$draggedfile[1])){
+    copyTo <- paste0("models/",input$draggedfile[1])
+    
+    print(copyTo)
+    CopyModel(input$draggedfile[2],copyTo,control=input$ace,alltokens=alltokens,allmods=allmods)
+    }
+  },suspended=F)
   
   
   # Define globals
@@ -1029,7 +1035,7 @@ server <- function(input, output,session) {
     
     similarmods <- which(apply(allmods, 1, function(x) sum( x ==phen)>=(dim(allmods)[2]-1)))
     
-    copyTo <- input$selecteddir
+    copyTo <- paste0("models/",input$selecteddir)
     copy <- paste0("models/All/mod",similarmods)
     for (i in copy){
       CopyModel(i,copyTo,control=input$ace,alltokens=alltokens,allmods=allmods)
@@ -1261,7 +1267,7 @@ server <- function(input, output,session) {
     nmods <- dim(allmods)[1]
     nindiv = 20
     if (nindiv>nmods) nindiv<- nmods
-    InitiateGA(nmods,nindiv,control=input$ace,alltokens=alltokens,allmods=allmods,seed=4)
+    InitiateGA(nmods,nindiv,control=input$ace,alltokens=alltokens,allmods=allmods,seed=100)
   })
   
   onclick("nextGA",{
@@ -1422,8 +1428,22 @@ server <- function(input, output,session) {
     "})"
   ), server = T)
   
+  
+  onclick("startSCM",{
+
+    mod <-input$modeltable_selected[1]
+    all <- allmods2()
+    path<-as.character(all[all$Number==mod,2])
+    relpath <- sub("/mod.ctl","",path)
+    InitiateSCM(path=relpath,control=input$ace,alltokens=alltokens,allmods=allmods)
+  })
+  
+
+  
+  
   scm_table <-  modalDialog(fluidPage(div(column(9,
                                              actionButton("openlocation3","Open Model Location"),
+                                             actionButton("startSCM","Start SCM"),
                                              DT::dataTableOutput('modeltable3'),
                                              
                                              radioGroupButtons("selecteddir3",NULL,choices = c("All"),selected = "All")
