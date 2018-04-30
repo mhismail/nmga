@@ -9,13 +9,9 @@
 #' @export
 
 CopyModel <- function (copy,copyTo,control=NULL,alltokens=NULL,allmods=NULL){
-  print(copyTo)
   if(!is.null(copyTo)){
     CheckThenCreate(copy,control,alltokens,allmods)
-    print(copyTo)
-    print("woog2")
     if(dir.exists(copyTo)){
-      print("woog")
       file.copy(copy, paste0(copyTo), recursive=TRUE)
       
       mod <-read.csv(paste0(copy,"/mod.csv"),as.is=T)
@@ -77,10 +73,14 @@ CheckThenCreate<- function (path,control=NULL,alltokens=NULL,allmods = NULL )({
 CreateModel<- function(controlstream,alltokens,phenotype,tokengroups){ 
   x<-controlstream 
   
+    
   for (j in 1:length(phenotype)){
     selectedTokenGroup <- tokengroups[j] 
-    selectedTokenSet <- phenotype[1,j] 
-    
+	
+    selectedTokenSet <- ifelse(length(phenotype) == 1, as.character(phenotype)[1], phenotype[1,j]) 
+
+	
+	
     tokengrouptext <- paste0("\\{",selectedTokenGroup,"\\}") 
     tokenlist <- alltokens[(alltokens$tokengroup==selectedTokenGroup & alltokens$tokenset==selectedTokenSet),3]# filter(alltokens,tokengroup==selectedTokenGroup,tokenset==selectedTokenSet)$token 
     tokenlist[tokenlist=="N/A"]<-"" 
@@ -118,8 +118,7 @@ CreateModel<- function(controlstream,alltokens,phenotype,tokengroups){
     
     maxeta <- gsub("[ETA\\(\\)]", "", regmatches(x, gregexpr("\\bETA\\(.*?\\)", x))[[1]]) 
     maxeta<-max(as.numeric(c(maxeta,0)),na.rm=T) 
-    print(maxeta)
   } 
   x<- gsub("ALLETAS",paste0("ETA",1:maxeta,collapse = " "),x)
   return(x) 
-} 
+}  

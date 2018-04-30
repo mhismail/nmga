@@ -1,5 +1,9 @@
 #STABLE-test
 
+
+
+
+
 #check if packages are installed, and if not install them
 if (!require("shiny")) install.packages("shiny")
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
@@ -62,23 +66,21 @@ InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
 # UI ----------------------------------------------------------------------
 ui <- fluidPage(
   useShinyjs(),
-  div("NMGA",class="title-bar"),
+  div("NMGA", class = "title-bar"),
   column(12,
-         
-         span(icon("save","fa-2x"),id="saveproj",class=c("nav-bar-el")),
-         span(icon("folder-open","fa-2x"),id="dir",class=c("nav-bar-el")),
-         span("Directory",id="proj",class=c("nav-bar-el")),
-         span(actionButton("viewmod","View Models",class="nav-bar-button")),
-         span(actionButton("openGA","Initiate Genetic Algorithm",class="nav-bar-button")),
-         span(actionButton("GAsettings",icon("gear","fa-2x"),class="nav-bar-button")),
-         span(actionButton("openSCM","Initiate SCM",class="nav-bar-button")),
-         span(actionButton("SCMsettings",icon("gear","fa-2x"),class="nav-bar-button")),
+         span(icon("save", "fa-2x"), id="saveproj", class=c("nav-bar-el")),
+         span(icon("folder-open", "fa-2x"), id="dir", class=c("nav-bar-el")),
+         span("Directory", id="proj", class=c("nav-bar-el")),
+         span(actionButton("viewmod", "View Models", class="nav-bar-button")),
+         span(actionButton("openGA", "Initiate Genetic Algorithm", class="nav-bar-button")),
+         span(actionButton("GAsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
+         span(actionButton("openSCM", "Initiate SCM", class="nav-bar-button")),
+         span(actionButton("SCMsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
          class="nav-bar"),
   column(6,
-
-         tabsetPanel(id="tabs",tabPanel("Control Stream",
+         tabsetPanel(id="tabs", tabPanel("Control Stream",
                                         textAreaInput("ace",
-                                                      label = NULL,
+                                                      label=NULL,
                                                       width="100%",
                                                       cols=NULL,
                                                       value="Select a directory with a single .ctl file")),
@@ -93,8 +95,6 @@ ui <- fluidPage(
   column(6,
          column(12,
                 align="center",
-
-                
                 radioGroupButtons("tokentype",
                                   NULL,
                                   choices = c("Covariate","ETA","EPS","Structure", "Custom"),
@@ -117,7 +117,6 @@ ui <- fluidPage(
                        actionButton("deletetokenset",
                                     "Delete",
                                     style="background-color: #b71616; color: white;")
-                       
                 ),
                 column(4,
                        awesomeRadio(inputId = "tokeninput",
@@ -210,8 +209,7 @@ ui <- fluidPage(
   includeScript("www/jquery.highlighttextarea.js"),
   includeScript("www/drag.js"),
   includeCSS("www/style.css"),
-  includeCSS("www/jquery.highlighttextarea.min.css"),
-  includeCSS("www/font-awesome-4.7.0/css/font-awesome.min.css")
+  includeCSS("www/jquery.highlighttextarea.min.css")
   )
 
 
@@ -245,11 +243,12 @@ server <- function(input, output,session) {
                             Fitness = numeric(0))
   
   f <- NULL
-  
-  
-  
   onclick("dir",{
     directory <-choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
+	if (is.na(directory)){
+		directory <- getwd()
+	}
+
     setwd(directory)
     if(length(list.files(pattern = ".*.ctl"))>0){
       updateTextAreaInput(session,
@@ -986,6 +985,7 @@ server <- function(input, output,session) {
       all <- allmods2()
       path<-as.character(all[all$Number==mod,2])
       relpath <- sub("/mod.ctl","",path)
+	  
       CheckThenCreate(relpath,input$ace,alltokens,allmods)
       unlink(paste0(homepath,'/',relpath,"/results"),recursive = TRUE)
       RunModel(paste0(homepath,'/',relpath),basename(relpath))
