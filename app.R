@@ -1,4 +1,6 @@
 #STABLE-test
+graphics.off()
+rm()
 
 
 
@@ -227,7 +229,6 @@ server <- function(input, output,session) {
     if(!is.null(input$draggedfile[1])){
     copyTo <- paste0("models/",input$draggedfile[1])
     
-    print(copyTo)
     CopyModel(input$draggedfile[2],copyTo,control=input$ace,alltokens=alltokens,allmods=allmods)
     }
   },suspended=F)
@@ -269,9 +270,8 @@ server <- function(input, output,session) {
     
     if (file.exists("Allmodsresults.csv.gz")){
       zz=gzfile('Allmodsresults.csv.gz')   
-      allmods <<- read.csv(zz)[-1:-9] #model phenotypes
+      allmods <<- read.csv(zz, stringsAsFactors = F)[-1:-9] #model phenotypes
     }
-    print(directory)
     runjs({
       paste("$('#proj').text('Current Directory:",basename(directory),"')")
     })
@@ -365,9 +365,9 @@ server <- function(input, output,session) {
       x<- gsub(paste0("\\{",selectedtokengroup,":",k,"\\}"),tokenlist[k],x)
     }
     
-    PKblock <- gsub(".*\\$PK(.*?)\\$.*","\\1",x) # Text between $PK and next $
-    THETAblock <- gsub(".*\\$THETA(.*?)\\$.*","\\1",x) # Text betwen $THETA and $
-    OMEGAblock <- gsub(".*\\$OMEGA(.*?)\\$.*","\\1",x) # Text betwen $OMEGA and $
+    PKblock <- gsub(".*\\$PK(.*?)[(\\$.*)$]","\\1",x) # Text between $PK and next $
+    THETAblock <- gsub(".*\\$THETA(.*?)[(\\$.*)$]","\\1",x) # Text betwen $THETA and $
+    OMEGAblock <- gsub(".*\\$OMEGA(.*?)[(\\$.*)$]","\\1",x) # Text betwen $OMEGA and $
     
     
     if(grepl(selectedtokengroup,PKblock)|grepl(selectedtokengroupnumbered,PKblock)){
@@ -912,7 +912,7 @@ server <- function(input, output,session) {
     
     if (selecteddir=="All"){
       zz=gzfile('Allmodsresults.csv.gz')   
-      allmodsresults <- read.csv(zz)
+      allmodsresults <- read.csv(zz, stringsAsFactors = F)
       # allmodsresults <- read.csv("Allmodsresults.csv")
       
       #if (models have been run since laste refresh)
@@ -952,11 +952,9 @@ server <- function(input, output,session) {
       
       nmods <- length(mod.directories)
       allmodslist<-lapply(mod.directories,RetrieveResultsEach)
-      print(Sys.time()-z)
-      
+
       allmods1<- rbind(allmods1, do.call(rbind, allmodslist))
       allmodsresults<-mutate(allmods1,Number = as.numeric(Number))%>%arrange(Number)
-      print(Sys.time()-z)
     }
     
     
@@ -965,7 +963,6 @@ server <- function(input, output,session) {
                     y=$(this).find("input").val()
                     console.log("hi")
   })'))
-    print(Sys.time()-z)
     allmodsresults
     
     
@@ -1030,7 +1027,7 @@ server <- function(input, output,session) {
     
     phen <- read.csv(paste0(relpath,"/mod.csv"),as.is=T)[-(1:9)]
     zz=gzfile('Allmodsresults.csv.gz')   
-    allmods <- read.csv(zz)[-1:-9]
+    allmods <- read.csv(zz, stringsAsFactors = F)[-1:-9]
     # allmods <- read.csv("Allmodsresults.csv",as.is=T)[-1:-9]
     
     similarmods <- which(apply(allmods, 1, function(x) sum( x ==phen)>=(dim(allmods)[2]-1)))
@@ -1524,10 +1521,17 @@ server <- function(input, output,session) {
     relpath <- sub("/mod.ctl","",path)
     
     a<-readLines(paste0(homepath,"/",relpath,"/results/raw_results_structure"))[-1]
+
     b<-strsplit(a,"[=|,]")
+
     c<-b[which(lengths(b)==3)]
+
+    
     d <- do.call(cbind,c)
+
     final<- as.data.frame(d,stringsAsFactors = F)
+
+    
     names(final)<- final[1,]
     
     thetaindices <- seq(as.numeric(final$theta[2])+1,as.numeric(final$theta[2])+as.numeric(final$theta[3]))
@@ -1543,7 +1547,9 @@ server <- function(input, output,session) {
     rawResults <- read.csv(paste0(homepath,"/",relpath,"/results/raw_results_mod.csv"))
     
     THETA <- rawResults[thetaindices] 
+
     THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices]*100)
+
     
     OMEGA <- rawResults[omegaindices] 
     OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] *100
@@ -1553,13 +1559,9 @@ server <- function(input, output,session) {
     SIGMARSE <- rawResults[sigmaSE]/rawResults[sigmaindices]*100
     
     THETATBL <- as.data.frame(cbind(t(THETA),t(THETASE)))
+    
     names(THETATBL) <- c("Estimate","RSE (%)")
-    
-    OMEGATBL <- as.data.frame(cbind(t(OMEGA),t(OMEGARSE),t(ETASHR)))
-    names(OMEGATBL) <- c("Estimate","RSE (%)", "Shrinkage (%)")
-    
-    SIGMATBL <- as.data.frame(cbind(t(SIGMA),t(SIGMARSE)))
-    names(SIGMA) <- c("Estimate","RSE (%)")
+
     THETATBL
   },rownames=T)
   
@@ -1588,25 +1590,15 @@ server <- function(input, output,session) {
     etaSHR <-  seq(as.numeric(final$shrinkage_eta[2])+1,as.numeric(final$shrinkage_eta[2])+as.numeric(final$shrinkage_eta[3]))
     
     rawResults <- read.csv(paste0(homepath,"/",relpath,"/results/raw_results_mod.csv"))
-    
-    THETA <- rawResults[thetaindices] 
-    THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices]*100)
-    
+
     OMEGA <- rawResults[omegaindices] 
     OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] *100
     ETASHR <- rawResults[etaSHR]
     
-    SIGMA <- rawResults[sigmaindices]
-    SIGMARSE <- rawResults[sigmaSE]/rawResults[sigmaindices]*100
-    
-    THETATBL <- as.data.frame(cbind(t(THETA),t(THETASE)))
-    names(THETATBL) <- c("Estimate","RSE (%)")
     
     OMEGATBL <- as.data.frame(cbind(t(OMEGA),t(OMEGARSE),t(ETASHR)))
     names(OMEGATBL) <- c("Estimate","RSE (%)", "Shrinkage (%)")
     
-    SIGMATBL <- as.data.frame(cbind(t(SIGMA),t(SIGMARSE)))
-    names(SIGMA) <- c("Estimate","RSE (%)")
     OMEGATBL
   },rownames=T)
   
