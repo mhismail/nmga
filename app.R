@@ -2,10 +2,6 @@
 graphics.off()
 rm()
 
-
-
-
-
 #check if packages are installed, and if not install them
 if (!require("shiny")) install.packages("shiny")
 if (!require("shinyWidgets")) install.packages("shinyWidgets")
@@ -16,10 +12,7 @@ if (!require("stringr")) install.packages("stringr")
 if (!require("DT")) install.packages("DT")
 if (!require("xpose4")) install.packages("xpose4")
 if (!require("gsubfn")) install.packages("gsubfn")
-if (!require("DiagrammeR")) install.packages("DiagrammeR")
 if (!require("ggplot2")) install.packages("ggplot2")
-if (!require("foreach")) install.packages("foreach")
-if (!require("doSNOW")) install.packages("doSNOW")
 if (!require("future")) install.packages("future")
 if (!require("pkga")){
   if (!require("devtools")) install.packages("devtools")
@@ -37,13 +30,13 @@ InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
   results_dir <- "SCM"
   i=1
   if(dir.exists(results_dir)){
-  while(dir.exists(results_dir)){
-    results_dir<- paste0("SCM(",i,")")
-    if(suppressWarnings(dir.create(results_dir))){
-      break
+    while(dir.exists(results_dir)){
+      results_dir<- paste0("SCM(",i,")")
+      if(suppressWarnings(dir.create(results_dir))){
+        break
+      }
+      i = i+1
     }
-    i = i+1
-  }
   }else{
     suppressWarnings(dir.create(results_dir))
   }
@@ -52,14 +45,14 @@ InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
   dir.create(copyTo)
   CheckThenCreate(path,control,alltokens,allmods)
   CopyModel(path,copyTo,control,alltokens,allmods) 
-#   homepath <-getwd()
-#   relpath <- path
-# 
-#   RunModel(paste0(homepath,'/',relpath),basename(relpath))
-#      
-#   
-#   
-#   write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
+  #   homepath <-getwd()
+  #   relpath <- path
+  # 
+  #   RunModel(paste0(homepath,'/',relpath),basename(relpath))
+  #      
+  #   
+  #   
+  #   write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
 } 
 
 
@@ -81,11 +74,11 @@ ui <- fluidPage(
          class="nav-bar"),
   column(6,
          tabsetPanel(id="tabs", tabPanel("Control Stream",
-                                        textAreaInput("ace",
-                                                      label=NULL,
-                                                      width="100%",
-                                                      cols=NULL,
-                                                      value="Select a directory with a single .ctl file")),
+                                         textAreaInput("ace",
+                                                       label=NULL,
+                                                       width="100%",
+                                                       cols=NULL,
+                                                       value="Select a directory with a single .ctl file")),
                      tabPanel("Preview",
                               textAreaInput("previewtext",
                                             label = NULL,
@@ -154,23 +147,23 @@ ui <- fluidPage(
                                   HTML("<h4 id='covrequiredpk'>$PK</h4>
                                        <h4 id='covrequiredtheta'>$THETA</h4>"),
                                   class="required-holder")
-                       ),
-                           div(id = "ETA",
-                               
-                               class = "tokentype",
-                               column(6,
-                               checkboxGroupButtons("etatypes",
-                                                    "Select IIV relationships",
-                                                    choices= c("None","Normal","Logarithmic","Normal (Proportional)") ),
-                               actionButton("addetas",
-                                            "Add Selected Token Sets")),
+                           ),
+                       div(id = "ETA",
+                           
+                           class = "tokentype",
+                           column(6,
+                                  checkboxGroupButtons("etatypes",
+                                                       "Select IIV relationships",
+                                                       choices= c("None","Normal","Logarithmic","Normal (Proportional)") ),
+                                  actionButton("addetas",
+                                               "Add Selected Token Sets")),
                            column(6,
                                   "Required {Token Group} in:", 
                                   HTML("<h4 id='etarequiredpk'>$PK</h4>
                                        <h4 id='etarequiredomega'>$OMEGA</h4>"),
                                   class="required-holder")
                            
-                       ),
+                           ),
                        div(id = "EPS",
                            class = "tokentype",
                            checkboxGroupButtons("epstypes",
@@ -198,11 +191,9 @@ ui <- fluidPage(
                                                              "Additional Compartments",
                                                              choices= c("1","2","3") ),
                                            actionButton("addstr",
-                                                        "Add Selected Token Sets")),
-                                    column(7,
-                                           grVizOutput("distributiondiagram")))
+                                                        "Add Selected Token Sets")))
                        ))), class="token-div-holder"
-         ),
+                ),
   HTML('
        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
        integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
@@ -227,9 +218,9 @@ server <- function(input, output,session) {
   #copy model to new directory when dragged
   observe({
     if(!is.null(input$draggedfile[1])){
-    copyTo <- paste0("models/",input$draggedfile[1])
-    
-    CopyModel(input$draggedfile[2],copyTo,control=input$ace,alltokens=alltokens,allmods=allmods)
+      copyTo <- paste0("models/",input$draggedfile[1])
+      
+      CopyModel(input$draggedfile[2],copyTo,control=input$ace,alltokens=alltokens,allmods=allmods)
     }
   },suspended=F)
   
@@ -246,10 +237,10 @@ server <- function(input, output,session) {
   f <- NULL
   onclick("dir",{
     directory <-choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
-	if (is.na(directory)){
-		directory <- getwd()
-	}
-
+    if (is.na(directory)){
+      directory <- getwd()
+    }
+    
     setwd(directory)
     if(length(list.files(pattern = ".*.ctl"))>0){
       updateTextAreaInput(session,
@@ -262,7 +253,7 @@ server <- function(input, output,session) {
                                       collapse = "\n")) 
     }
     
-
+    
     
     if (file.exists("alltokens.csv")){
       alltokens <- read.csv("alltokens.csv",as.is=T)
@@ -275,7 +266,7 @@ server <- function(input, output,session) {
     runjs({
       paste("$('#proj').text('Current Directory:",basename(directory),"')")
     })
-
+    
   })
   
   onclick("proj",{
@@ -283,10 +274,10 @@ server <- function(input, output,session) {
     
     
   }
-    
+  
   )
   
-
+  
   
   
   # Saving and loading projects ---------------------------------------------
@@ -952,7 +943,7 @@ server <- function(input, output,session) {
       
       nmods <- length(mod.directories)
       allmodslist<-lapply(mod.directories,RetrieveResultsEach)
-
+      
       allmods1<- rbind(allmods1, do.call(rbind, allmodslist))
       allmodsresults<-mutate(allmods1,Number = as.numeric(Number))%>%arrange(Number)
     }
@@ -982,7 +973,7 @@ server <- function(input, output,session) {
       all <- allmods2()
       path<-as.character(all[all$Number==mod,2])
       relpath <- sub("/mod.ctl","",path)
-	  
+      
       CheckThenCreate(relpath,input$ace,alltokens,allmods)
       unlink(paste0(homepath,'/',relpath,"/results"),recursive = TRUE)
       RunModel(paste0(homepath,'/',relpath),basename(relpath))
@@ -1427,7 +1418,7 @@ server <- function(input, output,session) {
   
   
   onclick("startSCM",{
-
+    
     mod <-input$modeltable_selected[1]
     all <- allmods2()
     path<-as.character(all[all$Number==mod,2])
@@ -1435,47 +1426,47 @@ server <- function(input, output,session) {
     InitiateSCM(path=relpath,control=input$ace,alltokens=alltokens,allmods=allmods)
   })
   
-
+  
   
   
   scm_table <-  modalDialog(fluidPage(div(column(9,
-                                             actionButton("openlocation3","Open Model Location"),
-                                             actionButton("startSCM","Start SCM"),
-                                             DT::dataTableOutput('modeltable3'),
-                                             
-                                             radioGroupButtons("selecteddir3",NULL,choices = c("All"),selected = "All")
-
-                                             )),
-                                  div(column(3, tabsetPanel(id = "modelinfo3",
-                                                            tabPanel("Plots3",
-                                                                     bsCollapse(bsCollapsePanel("Covariate Model",
-                                                                                                actionButton("ranparvscov3","ETAs vs Covariates"),
-                                                                                                actionButton("parvscov3","Parameters vs Covariates"),
-                                                                                                actionButton("parvspar3","Parameters vs Parameters"),
-                                                                                                
-                                                                                                actionButton("covscatter3","Covariate Scatter Plots")),
-                                                                                bsCollapsePanel("Goodness of Fit",
-                                                                                                actionButton("basicgof3","Basic GOF"),
-                                                                                                actionButton("indplots3","Individual Plots"),
-                                                                                                actionButton("dvpredipred3","DV vs Pred, IPRED")),
-                                                                                multiple = T,open=c("Covariate Model"))
-                                                            ),
-                                                            tabPanel("Parameters3",
-                                                                     bsCollapse(bsCollapsePanel("Structural (THETA)",
-                                                                                                tableOutput("thetas3")
-                                                                     ),
-                                                                     bsCollapsePanel("IIV (OMEGA)",
-                                                                                     tableOutput("omegas3")),
-                                                                     bsCollapsePanel("RUV (SIGMA)",
-                                                                                     tableOutput("sigmas3")),
-                                                                     multiple = T,
-                                                                     open=c("Structural (THETA)","IIV (OMEGA)","RUV (SIGMA)"))),
-                                                            tabPanel("Covariate Model",
-                                                                     tableOutput("regress.parms3")),
-                                                            tabPanel("PsN3",
-                                                                     actionButton("runvpc3","VPC")))))),easyClose = T)
+                                                 actionButton("openlocation3","Open Model Location"),
+                                                 actionButton("startSCM","Start SCM"),
+                                                 DT::dataTableOutput('modeltable3'),
+                                                 
+                                                 radioGroupButtons("selecteddir3",NULL,choices = c("All"),selected = "All")
+                                                 
+  )),
+  div(column(3, tabsetPanel(id = "modelinfo3",
+                            tabPanel("Plots3",
+                                     bsCollapse(bsCollapsePanel("Covariate Model",
+                                                                actionButton("ranparvscov3","ETAs vs Covariates"),
+                                                                actionButton("parvscov3","Parameters vs Covariates"),
+                                                                actionButton("parvspar3","Parameters vs Parameters"),
+                                                                
+                                                                actionButton("covscatter3","Covariate Scatter Plots")),
+                                                bsCollapsePanel("Goodness of Fit",
+                                                                actionButton("basicgof3","Basic GOF"),
+                                                                actionButton("indplots3","Individual Plots"),
+                                                                actionButton("dvpredipred3","DV vs Pred, IPRED")),
+                                                multiple = T,open=c("Covariate Model"))
+                            ),
+                            tabPanel("Parameters3",
+                                     bsCollapse(bsCollapsePanel("Structural (THETA)",
+                                                                tableOutput("thetas3")
+                                     ),
+                                     bsCollapsePanel("IIV (OMEGA)",
+                                                     tableOutput("omegas3")),
+                                     bsCollapsePanel("RUV (SIGMA)",
+                                                     tableOutput("sigmas3")),
+                                     multiple = T,
+                                     open=c("Structural (THETA)","IIV (OMEGA)","RUV (SIGMA)"))),
+                            tabPanel("Covariate Model",
+                                     tableOutput("regress.parms3")),
+                            tabPanel("PsN3",
+                                     actionButton("runvpc3","VPC")))))),easyClose = T)
   
- # ---------------------------------------------------------------------
+  # ---------------------------------------------------------------------
   
   datafile <- reactive({
     x<- input$ace
@@ -1490,25 +1481,6 @@ server <- function(input, output,session) {
   },filter = 'top',options = list(pageLength = 100,scrollY = "70vh",scrollX="100%",dom = 't', autoWidth = TRUE,columnDefs = list(list(className = 'dt-center', targets = "_all"))),rownames= FALSE)
   
   
-  # Diagrams ----------------------------------------------------------------
-  
-  output$distributiondiagram <- renderGrViz({
-    b <- gsub(".*\\$MODEL(.*)\\$.*","\\1",input$ace)
-    c<- regmatches(b, gregexpr("COMP.*\\(.*?\\)", b))[[1]]
-    d <- gsub(".*\\((.*)\\).*","\\1",c)
-    e<- gsub("\\,","",d)
-    
-    cmtn <- which(e==input$selectcmt)
-    ncmts <- length(e)
-    if (input$ncmt==1) a<-p1cmt(substr(input$selectcmt,1,7),cmtn,ncmts)   
-    if (input$ncmt==2) a<-p2cmt(substr(input$selectcmt,1,7),cmtn,ncmts) 
-    if (input$ncmt==3) a<-p3cmt(substr(input$selectcmt,1,7),cmtn,ncmts)  
-    a
-    
-    
-  })
-  
-  
   
   
   # Parameter tables --------------------------------------------------------
@@ -1521,16 +1493,16 @@ server <- function(input, output,session) {
     relpath <- sub("/mod.ctl","",path)
     
     a<-readLines(paste0(homepath,"/",relpath,"/results/raw_results_structure"))[-1]
-
+    
     b<-strsplit(a,"[=|,]")
-
+    
     c<-b[which(lengths(b)==3)]
-
+    
     
     d <- do.call(cbind,c)
-
+    
     final<- as.data.frame(d,stringsAsFactors = F)
-
+    
     
     names(final)<- final[1,]
     
@@ -1547,9 +1519,9 @@ server <- function(input, output,session) {
     rawResults <- read.csv(paste0(homepath,"/",relpath,"/results/raw_results_mod.csv"))
     
     THETA <- rawResults[thetaindices] 
-
+    
     THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices]*100)
-
+    
     
     OMEGA <- rawResults[omegaindices] 
     OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] *100
@@ -1561,7 +1533,7 @@ server <- function(input, output,session) {
     THETATBL <- as.data.frame(cbind(t(THETA),t(THETASE)))
     
     names(THETATBL) <- c("Estimate","RSE (%)")
-
+    
     THETATBL
   },rownames=T)
   
@@ -1590,7 +1562,7 @@ server <- function(input, output,session) {
     etaSHR <-  seq(as.numeric(final$shrinkage_eta[2])+1,as.numeric(final$shrinkage_eta[2])+as.numeric(final$shrinkage_eta[3]))
     
     rawResults <- read.csv(paste0(homepath,"/",relpath,"/results/raw_results_mod.csv"))
-
+    
     OMEGA <- rawResults[omegaindices] 
     OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] *100
     ETASHR <- rawResults[etaSHR]
