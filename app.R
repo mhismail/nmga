@@ -194,17 +194,23 @@ ui <- fluidPage(
                                                         "Add Selected Token Sets")))
                        ))), class="token-div-holder"
                 ),
-  HTML('
-       <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
-       integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
-       crossorigin="anonymous"></script>
-       <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">'),
   includeScript("www/jquery.highlighttextarea.js"),
   includeScript("www/drag.js"),
   includeCSS("www/style.css"),
-  includeCSS("www/jquery.highlighttextarea.min.css")
+  includeCSS("www/jquery.highlighttextarea.min.css"),
+  
+  
+  # Add tooltips ------------------------------------------------------------
+  
+  bsTooltip(id = "dir", title = "Load Project"),
+  bsTooltip(id = "saveproj", title = "Save Project"),
+  bsTooltip(id = "proj", title = "Open in directory in File Explorer"),
+  bsTooltip(id = "GAsettings", title = "Genetic Algorithm Settings"),
+  bsTooltip(id = "SCMsettings", title = "SCM Settings"),
+  bsTooltip(id = "deletetokengroup", title = "Delete selected token group"),
+  bsTooltip(id = "preview", title = "Preview control stream with selected token set"),
+  bsTooltip(id = "deletetokenset", title = "Delete selected token set")
   )
-
 
 # Server ------------------------------------------------------------------
 
