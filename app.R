@@ -63,6 +63,7 @@ ui <- fluidPage(
   useShinyjs(),
   div("NMGA", class = "title-bar"),
   column(12,
+         span(icon("plus", "fa-2x"), id="newproj", class=c("nav-bar-el")),
          span(icon("save", "fa-2x"), id="saveproj", class=c("nav-bar-el")),
          span(icon("folder-open", "fa-2x"), id="dir", class=c("nav-bar-el")),
          span("Directory", id="proj", class=c("nav-bar-el")),
@@ -71,6 +72,11 @@ ui <- fluidPage(
          span(actionButton("GAsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
          span(actionButton("openSCM", "Initiate SCM", class="nav-bar-button")),
          span(actionButton("SCMsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
+         div(id = "new_project_div", style="display: none;",
+             span(h2("Control Stream", class="nav-bar-button"),
+                  actionButton("select_ctl", "Select Control Stream", class="nav-bar-button"), class="nav-bar-el"),
+             span(h2("Control Stream", class="nav-bar-button"),
+                  actionButton("select_ctl", "Select Control Stream", class="nav-bar-button"), class="nav-bar-el")),
          class="nav-bar"),
   column(6,
          tabsetPanel(id="tabs", tabPanel("Control Stream",
@@ -215,6 +221,10 @@ ui <- fluidPage(
 # Server ------------------------------------------------------------------
 
 server <- function(input, output,session) {
+  # Create a new project
+  onclick("newproj",{
+    toggle("new_project_div")
+  })
   
   #these varaibles are used to trigger next generation when no more model tasks are found to be running
   invalidate <- reactiveValues(nextGA=1,
