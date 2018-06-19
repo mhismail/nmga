@@ -201,7 +201,12 @@ ui <- fluidPage(
                                                         "Add Selected Token Sets")),
                                     column(7,
                                            grVizOutput("distributiondiagram")))
-                       ))), class="token-div-holder"
+                       ),
+                       div(id = "Custom",
+                           class = "tokentype",
+                           actionButton("addcustom",
+                                        "Add Blank Token Set")
+                           ))), class="token-div-holder"
          ),
   HTML('
        <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
@@ -528,7 +533,16 @@ server <- function(input, output,session) {
   # Add to existing tokengroup ----------------------------------------------
   
   onclick("addtokensetedit",{
-    tokenToAdd<-data.frame(tokengroup=input$tokengroupinput,tokenset="New Token",token=c("N/A","N/A"))
+    n_tokensets <- length(unique(filter(alltokens, 
+                              tokengroup==input$tokengroupinput)$tokenset))
+    
+
+    n_tokens <- length(filter(alltokens, 
+                              tokengroup==input$tokengroupinput, 
+                              tokenset==input$tokensetinput)$token)
+    
+    
+    tokenToAdd<-data.frame(tokengroup=input$tokengroupinput,tokenset=paste("Tokenset",n_tokensets+1),token=rep("N/A",n_tokens))
     
     # If tokenset exists already, replace it
     alltokens <- filter(alltokens,!(tokengroup%in%tokenToAdd$tokengroup & tokenset%in%tokenToAdd$tokenset))
@@ -553,7 +567,7 @@ server <- function(input, output,session) {
                         lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])), function(i) {
                           column(12,
                                  textInput(paste0("tokenset",i),"Token Set Name",value =unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])[i] ,width = "33%"),
-                                 lapply(1:length(alltokens$token[alltokens$tokengroup==input$tokengroupinput & alltokens$tokenset==unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])[i]]),function(j){
+                                 lapply(seq_along(alltokens$token[alltokens$tokengroup==input$tokengroupinput & alltokens$tokenset==unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])[i]]),function(j){
                                    column(6,
                                           textAreaInput(paste0("edittoken",i,j),paste("Token",j),value = alltokens$token[alltokens$tokengroup==input$tokengroupinput & 
                                                                                                                            alltokens$tokenset==unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])[i]][j],
@@ -783,6 +797,23 @@ server <- function(input, output,session) {
             }
           }
   )
+  
+  onclick("addcustom",{
+    tokenToAdd<- data.frame(tokengroup = input$tokengroupinput, tokenset = "New Token", token = "N/A")
+    alltokens <- filter(alltokens,!(tokengroup%in%tokenToAdd$tokengroup & tokenset%in%tokenToAdd$tokenset))
+    alltokens<-rbind(alltokens,tokenToAdd)
+    
+    tokensetlist<- filter(alltokens,tokengroup==input$tokengroupinput)$tokenset%>%as.character()
+    updateAwesomeRadio(session,inputId = "tokensetinput",choices =unique(tokensetlist),selected =unique(tokensetlist)[1])
+    
+    
+    tokenlist<- filter(alltokens,tokenset==unique(tokensetlist)[1])$token%>%as.character()
+    updateAwesomeRadio(session,inputId = "tokeninput",choices =as.character(tokenlist),selected = NULL)
+    
+    hide("Custom",anim=T)
+  }
+  )
+          
   # END ---------------------------------------------------------------------
   
   
@@ -1264,7 +1295,7 @@ server <- function(input, output,session) {
     nmods <- dim(allmods)[1]
     nindiv = 20
     if (nindiv>nmods) nindiv<- nmods
-    InitiateGA(nmods,nindiv,control=input$ace,alltokens=alltokens,allmods=allmods,seed=100)
+    InitiateGA(nmods,nindiv,control=input$ace,alltokens=alltokens,allmods=allmods,seed=10)
   })
   
   onclick("nextGA",{
