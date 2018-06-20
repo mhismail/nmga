@@ -197,15 +197,8 @@ ui <- fluidPage(
                                                              "Additional Compartments",
                                                              choices= c("1","2","3") ),
                                            actionButton("addstr",
-<<<<<<< HEAD
                                                         "Add Selected Token Sets")))
-                       ))), class="token-div-holder"
                 ),
-=======
-                                                        "Add Selected Token Sets")),
-                                    column(7,
-                                           grVizOutput("distributiondiagram")))
-                       ),
                        div(id = "Custom",
                            class = "tokentype",
                            actionButton("addcustom",
@@ -217,7 +210,6 @@ ui <- fluidPage(
        integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
        crossorigin="anonymous"></script>
        <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">'),
->>>>>>> 3fcfab7c660618c850f551bda0d57a689c4593b7
   includeScript("www/jquery.highlighttextarea.js"),
   includeScript("www/drag.js"),
   includeCSS("www/style.css"),
