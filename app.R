@@ -26,34 +26,34 @@ if (!require("pkga")){
 #Set plot theme
 theme_set(theme_bw())
 
-InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
-  results_dir <- "SCM"
-  i=1
-  if(dir.exists(results_dir)){
-    while(dir.exists(results_dir)){
-      results_dir<- paste0("SCM(",i,")")
-      if(suppressWarnings(dir.create(results_dir))){
-        break
-      }
-      i = i+1
-    }
-  }else{
-    suppressWarnings(dir.create(results_dir))
-  }
-  
-  copyTo<- paste0(results_dir,"/Base")
-  dir.create(copyTo)
-  CheckThenCreate(path,control,alltokens,allmods)
-  CopyModel(path,copyTo,control,alltokens,allmods) 
-  #   homepath <-getwd()
-  #   relpath <- path
-  # 
-  #   RunModel(paste0(homepath,'/',relpath),basename(relpath))
-  #      
-  #   
-  #   
-  #   write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
-} 
+# InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
+#   results_dir <- "SCM"
+#   i=1
+#   if(dir.exists(results_dir)){
+#     while(dir.exists(results_dir)){
+#       results_dir<- paste0("SCM(",i,")")
+#       if(suppressWarnings(dir.create(results_dir))){
+#         break
+#       }
+#       i = i+1
+#     }
+#   }else{
+#     suppressWarnings(dir.create(results_dir))
+#   }
+#   
+#   copyTo<- paste0(results_dir,"/Base")
+#   dir.create(copyTo)
+#   CheckThenCreate(path,control,alltokens,allmods)
+#   CopyModel(path,copyTo,control,alltokens,allmods) 
+#   #   homepath <-getwd()
+#   #   relpath <- path
+#   # 
+#   #   RunModel(paste0(homepath,'/',relpath),basename(relpath))
+#   #      
+#   #   
+#   #   
+#   #   write.csv(data.frame(Generation=1,Inidvidual=pop,Dir=popmods), "GAgens.csv",row.names=F)
+# } 
 
 
 
@@ -205,11 +205,7 @@ ui <- fluidPage(
                                         "Add Blank Token Set")
                            ))), class="token-div-holder"
          ),
-  HTML('
-       <script src="https://code.jquery.com/ui/1.12.0/jquery-ui.min.js"
-       integrity="sha256-eGE6blurk5sHj+rmkfsGYeKyZx3M4bG+ZlFyA7Kns7E="
-       crossorigin="anonymous"></script>
-       <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.0/themes/smoothness/jquery-ui.css">'),
+
   includeScript("www/jquery.highlighttextarea.js"),
   includeScript("www/drag.js"),
   includeCSS("www/style.css"),
@@ -1424,6 +1420,9 @@ server <- function(input, output,session) {
     homepath <-getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA/"
     path<-as.character(all[all$Number==input$modeltable_selected[1],2])
     file <-paste0(homepath,"/",path)
+    relpath <- sub("/mod.ctl","",path)
+    
+    CheckThenCreate(relpath,input$ace,alltokens,allmods)
     if (file.exists(file)){
       updateTextAreaInput(session,"editcontrol",value=paste(readLines(file),collapse = "\n"))
     }
