@@ -4,7 +4,7 @@
 \alias{RunModel}
 \title{RunModel}
 \usage{
-RunModel(directory, model = NULL)
+RunModel(directory, model = NULL, wait = T, exit = T)
 }
 \arguments{
 \item{directory}{A character string containing the path to folder in which mod.ctl is located}

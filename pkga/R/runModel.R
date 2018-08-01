@@ -5,8 +5,9 @@
 #' @param model Optional. A character string providing title of running process
 #' @export
 
-RunModel <- function(directory,model=NULL){
-  shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results -clean=3 mod.ctl'),wait = T)
+RunModel <- function(directory, model=NULL, wait = T, exit = T){
+  if (exit == T) close <- " & exit" else close <- ""
+  shell(paste0(' start cmd /k  "cd ',directory,' &title ', model,'&execute -directory=results -clean=3 mod.ctl', exit),wait = wait)
   write.table(data.frame(directory,Sys.time()),
               "modelruntemp.csv", sep = ",",row.names = F,col.names = F,  append = T)
 }

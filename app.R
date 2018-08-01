@@ -341,8 +341,8 @@ server <- function(input, output,session) {
     # Parse control stream, search for "$INPUT", set covariate choices --------
     # Choices will be words following $INPUT, filtering out NONMEM reserved ---
     a<- strsplit(x,"\n")[[1]]
-    if(length(strsplit(a[startsWith(a,"$INPUT")]," "))>0){
-      covlist <- strsplit(a[startsWith(a,"$INPUT")]," ")[[1]][-1]
+    if(length(strsplit(a[startsWith(a,"$INPUT")],"\\s+"))>0){
+      covlist <- strsplit(a[startsWith(a,"$INPUT")],"\\s+")[[1]][-1]
       covlist <- covlist[!(covlist%in%c("DATE=DROP","DATE","RATE","CMT","ID","TIME","AMT",
                                         "SS","ADDL","II","DV","MDV","EVID","DUR"))]
       updateSelectizeInput(session,
@@ -436,8 +436,8 @@ server <- function(input, output,session) {
     selectedTokenGroup <- input$tokengroupinput
     x <-input$ace
     a<- strsplit(x,"\n")[[1]]
-    if(length(strsplit(a[startsWith(a,"$INPUT")]," "))>0){
-      covlist <- strsplit(a[startsWith(a,"$INPUT")]," ")[[1]][-1]
+    if(length(strsplit(a[startsWith(a,"$INPUT")],"\\s+"))>0){
+      covlist <- strsplit(a[startsWith(a,"$INPUT")],"\\s+")[[1]][-1]
       covlist <- covlist[!(covlist%in%c("DATE=DROP","DATE","RATE","CMT","ID","TIME","AMT",
                                         "SS","ADDL","II","DV","MDV","EVID","DUR"))]
       bestguess <- covlist[str_detect(selectedTokenGroup,covlist)][which(nchar(covlist[str_detect(selectedTokenGroup,covlist)])==max(nchar(covlist[str_detect(selectedTokenGroup,covlist)])))]
@@ -642,7 +642,7 @@ server <- function(input, output,session) {
           {tokenTypes<- data.frame(tokengroup = input$tokengroupinput,tokenset = input$covtypes, stringsAsFactors=FALSE)
           x <- input$ace
           a<- strsplit(x,"\n")[[1]]
-          covlist <- strsplit(a[startsWith(a,"$INPUT")]," ")[[1]][-1]
+          covlist <- strsplit(a[startsWith(a,"$INPUT")],"\\s+")[[1]][-1]
           
           if(any(covlist==input$cov)){
             values<-as.numeric(datafile()[which(covlist==input$cov)][[1]])
@@ -919,7 +919,7 @@ server <- function(input, output,session) {
     ctlstream <- input$ace
     #copy data to subfolder
     a<- strsplit(ctlstream,"\n")[[1]]
-    datapath <- strsplit(a[startsWith(a,"$DATA")]," ")[[1]][2]
+    datapath <- strsplit(a[startsWith(a,"$DATA")],"\\s+")[[1]][2]
     file.copy(datapath,paste0("models"))
     
     
@@ -956,7 +956,7 @@ server <- function(input, output,session) {
       
       #if (models have been run since laste refresh)
       if (file.exists("modelruntemp.csv")&file.info("modelruntemp.csv")$size>0){ 
-        modelsran <- read.csv("modelruntemp.csv",header = F)%>%distinct(1,.keep_all=T)
+        modelsran <- read.csv("modelruntemp.csv",header = F)%>%filter(!duplicated(V1))
         checkpresent <- file.exists(paste0(modelsran[,1],"/results/PsN_execute_plots.R"))
         resultspresent <- modelsran[checkpresent,]
         if (dim(resultspresent)[1]>0){
@@ -1095,10 +1095,11 @@ server <- function(input, output,session) {
     select = list(style = 'os', # set 'os' select style so that ctrl/shift + click in enabled
                   items = 'row'), # items can be cell, row or column
     pageLength = 100,
-    dom = 'tpf', 
+    dom = 'Btpf', 
+    buttons = I('colvis'),
     columnDefs = list(list(className = 'dt-center', targets = "_all"))),
   rownames= FALSE, 
-  extensions = 'Select', 
+  extensions = c('Select', "Buttons"), 
   selection="none", 
   callback = JS(
     "table.on( 'click.dt', 'tbody td', function (e) {", # react on click event
@@ -1522,7 +1523,7 @@ server <- function(input, output,session) {
   datafile <- reactive({
     x<- input$ace
     a<- strsplit(x,"\n")[[1]]
-    datapath <- strsplit(a[startsWith(a,"$DATA")]," ")[[1]][2]
+    datapath <- strsplit(a[startsWith(a,"$DATA")],"\\s+")[[1]][2]
     
     read.csv(datapath)
   })
