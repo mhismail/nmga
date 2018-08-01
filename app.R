@@ -1095,7 +1095,7 @@ server <- function(input, output,session) {
     select = list(style = 'os', # set 'os' select style so that ctrl/shift + click in enabled
                   items = 'row'), # items can be cell, row or column
     pageLength = 100,
-    dom = 'Btpf', 
+    dom = 'Bfrtip', 
     buttons = I('colvis'),
     columnDefs = list(list(className = 'dt-center', targets = "_all"))),
   rownames= FALSE, 
