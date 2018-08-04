@@ -60,42 +60,70 @@ ui <- fluidPage(
   useShinyjs(),
   div("NMGA", class = "title-bar"),
   column(12,
-         span(icon("plus", "fa-2x"), id="newproj", class=c("nav-bar-el")),
-         span(icon("save", "fa-2x"), id="saveproj", class=c("nav-bar-el")),
-         span(icon("folder-open", "fa-2x"), id="dir", class=c("nav-bar-el")),
-         span("Directory", id="proj", class=c("nav-bar-el")),
-         span(actionButton("viewmod", "View Models", class="nav-bar-button")),
-         span(actionButton("openGA", "Initiate Genetic Algorithm", class="nav-bar-button")),
-         span(actionButton("GAsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
-         span(actionButton("openSCM", "Initiate SCM", class="nav-bar-button")),
-         span(actionButton("SCMsettings", icon("gear", "fa-2x"), class="nav-bar-button")),
-         div(id = "new_project_div", style="display: none;",
-             span(h2("Control Stream", class="nav-bar-button"),
-                  actionButton("select_ctl", "Select Control Stream", class="nav-bar-button"), class="nav-bar-el"),
-             span(h2("Control Stream", class="nav-bar-button"),
-                  actionButton("select_ctl", "Select Control Stream", class="nav-bar-button"), class="nav-bar-el")),
-         class="nav-bar"),
+         span(icon("plus", "fa-2x"), 
+              id = "newproj", 
+              class = c("nav-bar-el")),
+         span(icon("save", "fa-2x"), 
+              id = "saveproj", 
+              class = c("nav-bar-el")),
+         span(icon("folder-open", "fa-2x"), 
+              id = "dir", 
+              class = c("nav-bar-el")),
+         span("Directory", 
+              id = "proj", 
+              class = c("nav-bar-el")),
+         span(actionButton("viewmod", "View Models", 
+                           class = "nav-bar-button")),
+         span(actionButton("openGA", "Initiate Genetic Algorithm", 
+                           class = "nav-bar-button")),
+         span(actionButton("GAsettings", 
+                           icon("gear", "fa-2x"), 
+                           class = "nav-bar-button")),
+         span(actionButton("openSCM", 
+                           "Initiate SCM", 
+                           class = "nav-bar-button")),
+         span(actionButton("SCMsettings", 
+                           icon("gear", "fa-2x"), 
+                           class = "nav-bar-button")),
+         div(id = "new_project_div", style = "display: none;",
+             span(h2("Control Stream", 
+                     class = "nav-bar-button"),
+                  actionButton("select_ctl", 
+                               "Select Control Stream", 
+                               class = "nav-bar-button"), 
+                  class="nav-bar-el"),
+             span(h2("Control Stream", 
+                     class="nav-bar-button"),
+                  actionButton("select_ctl", 
+                               "Select Control Stream", 
+                               class = "nav-bar-button"), 
+                  class = "nav-bar-el")),
+         class = "nav-bar"),
   column(6,
-         tabsetPanel(id="tabs", tabPanel("Control Stream",
+         tabsetPanel(id = "tabs", tabPanel("Control Stream",
                                          textAreaInput("ace",
-                                                       label=NULL,
-                                                       width="100%",
-                                                       cols=NULL,
-                                                       value="Select a directory with a single .ctl file")),
+                                                       label = NULL,
+                                                       width = "100%",
+                                                       cols = NULL,
+                                                       value = "Select a directory with a single .ctl file")),
                      tabPanel("Preview",
                               textAreaInput("previewtext",
                                             label = NULL,
-                                            width="100%",
-                                            cols=NULL,
-                                            value="")),
+                                            width = "100%",
+                                            cols = NULL,
+                                            value = "")),
                      tabPanel("Data",
                               DT::dataTableOutput("data")))),
   column(6,
          column(12,
-                align="center",
+                align = "center",
                 radioGroupButtons("tokentype",
                                   NULL,
-                                  choices = c("Covariate","ETA","EPS","Structure", "Custom"),
+                                  choices = c("Covariate",
+                                              "ETA",
+                                              "EPS",
+                                              "Structure", 
+                                              "Custom"),
                                   selected = NULL)),
          column(12,
                 column(4,
@@ -133,11 +161,15 @@ ui <- fluidPage(
                              selected = NULL,
                              multiple = F,
                              options = list(maxOptions =
-                                              100,create=T)
+                                              100, create = T)
                            ),
                            checkboxGroupButtons("covtypes",
                                                 "Select Covariate relationships",
-                                                choices= c("None", "Linear","Power","Exponential","Proportional") ),
+                                                choices = c("None", 
+                                                           "Linear",
+                                                           "Power",
+                                                           "Exponential",
+                                                           "Proportional") ),
                            column(6,
                                   materialSwitch(inputId = "center", 
                                                  label = "Center Covariate (Median)", 
@@ -157,7 +189,10 @@ ui <- fluidPage(
                            column(6,
                                   checkboxGroupButtons("etatypes",
                                                        "Select IIV relationships",
-                                                       choices= c("None","Normal","Logarithmic","Normal (Proportional)") ),
+                                                       choices = c("None",
+                                                                  "Normal",
+                                                                  "Logarithmic",
+                                                                  "Normal (Proportional)") ),
                                   actionButton("addetas",
                                                "Add Selected Token Sets")),
                            column(6,
@@ -171,7 +206,9 @@ ui <- fluidPage(
                            class = "tokentype",
                            checkboxGroupButtons("epstypes",
                                                 "Select Residual Error Models",
-                                                choices= c("Additive","Proportional","Additive+Proportional") ),
+                                                choices = c("Additive",
+                                                           "Proportional",
+                                                           "Additive+Proportional") ),
                            actionButton("addeps",
                                         "Add Selected Token Sets")
                        ),
@@ -179,7 +216,9 @@ ui <- fluidPage(
                            class = "tokentype",
                            radioGroupButtons("strtypes",
                                              "Select Structural Component",
-                                             choices= c("Compartments","Tlag","Michaelis-Menten") ),
+                                             choices= c("Compartments",
+                                                        "Tlag",
+                                                        "Michaelis-Menten") ),
                            fluidRow(column(5,
                                            selectizeInput(
                                              "selectcmt",
@@ -188,11 +227,11 @@ ui <- fluidPage(
                                              selected = NULL,
                                              multiple = F,
                                              options = list(maxOptions =
-                                                              100,create=T)
+                                                              100, create = T)
                                            ),
                                            radioGroupButtons("ncmt",
                                                              "Additional Compartments",
-                                                             choices= c("1","2","3") ),
+                                                             choices= c("1", "2", "3") ),
                                            actionButton("addstr",
                                                         "Add Selected Token Sets")))
                 ),
@@ -200,7 +239,7 @@ ui <- fluidPage(
                            class = "tokentype",
                            actionButton("addcustom",
                                         "Add Blank Token Set")
-                           ))), class="token-div-holder"
+                           ))), class = "token-div-holder"
          ),
 
   includeScript("www/jquery.highlighttextarea.js"),
@@ -230,15 +269,16 @@ server <- function(input, output,session) {
   })
   
   #these varaibles are used to trigger next generation when no more model tasks are found to be running
-  invalidate <- reactiveValues(nextGA=1,
-                               future=1)
+  invalidate <- reactiveValues(nextGA = 1,
+                               future = 1)
   
   #copy model to new directory when dragged
   observe({
     if(!is.null(input$draggedfile[1])){
       copyTo <- paste0("models/", input$draggedfile[1])
       
-      CopyModel(input$draggedfile[2], copyTo, control = input$ace, alltokens = alltokens, allmods = allmods)
+      CopyModel(input$draggedfile[2], copyTo, control = input$ace, 
+                alltokens = alltokens, allmods = allmods)
     }
   }, suspended = F)
   
@@ -322,7 +362,9 @@ server <- function(input, output,session) {
     choices <- gsub("\\{|:(.*)|\\}", "", 
                    regmatches(x, gregexpr("\\{.*?\\}", x))[[1]])
     choices2 <- gsub("\\{|:(.*)|\\}", "", 
-                     regmatches(toString(alltokens$token), gregexpr("\\{.*?\\}", toString(alltokens$token)))[[1]])
+                     regmatches(toString(alltokens$token), 
+                                gregexpr("\\{.*?\\}", 
+                                         toString(alltokens$token)))[[1]])
     choices <- unique(c(choices, choices2))
     if(length(choices) == 0){choices = c("")}
     updateAwesomeRadio(session,
@@ -334,8 +376,10 @@ server <- function(input, output,session) {
     a <- strsplit(x, "\n")[[1]]
     if(length(strsplit(a[startsWith(a, "$INPUT")], "\\s+")) > 0){
       covlist <- strsplit(a[startsWith(a, "$INPUT")], "\\s+")[[1]][-1]
-      covlist <- covlist[!(covlist %in% c("DATE=DROP", "DATE", "RATE", "CMT", "ID", "TIME", "AMT",
-                                        "SS", "ADDL", "II", "DV", "MDV", "EVID", "DUR"))]
+      covlist <- covlist[!(covlist %in% c("DATE=DROP", "DATE", "RATE", 
+                                          "CMT", "ID", "TIME", "AMT",
+                                          "SS", "ADDL", "II", "DV", 
+                                          "MDV", "EVID", "DUR"))]
       updateSelectizeInput(session,
                            "cov",
                            choices = covlist)
@@ -343,9 +387,9 @@ server <- function(input, output,session) {
     
     # Parse control stream for compartments present
     b <- gsub(".*\\$MODEL(.*?)\\$.*", "\\1", x)
-    c<- regmatches(b, gregexpr("COMP.*\\(.*?\\)", b))[[1]]
+    c <- regmatches(b, gregexpr("COMP.*\\(.*?\\)", b))[[1]]
     d <- gsub(".*\\((.*)\\).*", "\\1", c)
-    e<- gsub("\\,", "", d)
+    e <- gsub("\\,", "", d)
     updateSelectizeInput(session, "selectcmt", choices = e)
   }, priority = 100)
   # END ---------------------------------------------------------------------
@@ -358,12 +402,17 @@ server <- function(input, output,session) {
     x <- input$ace
     
     #check if required tokens are present
-    selectedtokengroup <- paste0("\\{",input$tokengroupinput, "\\}")
-    selectedtokengroupnumbered <-  paste0("\\{",input$tokengroupinput, ":[0-9]\\}")
+    selectedtokengroup <- paste0("\\{", input$tokengroupinput, "\\}")
+    selectedtokengroupnumbered <-  paste0("\\{", input$tokengroupinput, ":[0-9]\\}")
     
-    numberedtokengroups <- as.numeric(gsub(paste0("\\{", selectedtokengroup, ":|\\}"), 
+    numberedtokengroups <- as.numeric(gsub(paste0("\\{", 
+                                                  selectedtokengroup, 
+                                                  ":|\\}"), 
                                            "",
-                                           regmatches(x, gregexpr(paste0("\\{", selectedtokengroup, ":([0-9])\\}"), x))[[1]]))
+                                           regmatches(x, 
+                                                      gregexpr(paste0("\\{", 
+                                                                      selectedtokengroup, 
+                                                                      ":([0-9])\\}"), x))[[1]]))
     
     for (k in numberedtokengroups){
       x<- gsub(paste0("\\{", selectedtokengroup, ":", k, "\\}"), tokenlist[k], x)
@@ -427,8 +476,10 @@ server <- function(input, output,session) {
     a <- strsplit(x, "\n")[[1]]
     if(length(strsplit(a[startsWith(a, "$INPUT")], "\\s+")) > 0){
       covlist <- strsplit(a[startsWith(a, "$INPUT")], "\\s+")[[1]][-1]
-      covlist <- covlist[!(covlist %in% c("DATE=DROP", "DATE", "RATE", "CMT", "ID", "TIME", "AMT",
-                                        "SS", "ADDL", "II", "DV", "MDV", "EVID", "DUR"))]
+      covlist <- covlist[!(covlist %in% c("DATE=DROP", "DATE", "RATE", 
+                                          "CMT", "ID", "TIME", "AMT",
+                                          "SS", "ADDL", "II", "DV", 
+                                          "MDV", "EVID", "DUR"))]
       bestguess <- covlist[str_detect(selectedTokenGroup, covlist)][which(nchar(covlist[str_detect(selectedTokenGroup, covlist)]) == max(nchar(covlist[str_detect(selectedTokenGroup, covlist)])))]
       updateSelectizeInput(session, "cov", selected = bestguess)
     }
@@ -441,10 +492,15 @@ server <- function(input, output,session) {
     if(!is.null(input$tokengroupinput) & !is.null(input$tokensetinput)){
       selectedTokenGroup <- input$tokengroupinput
       selectedTokenSet <- input$tokensetinput
-      tokenlist <- filter(alltokens, tokengroup == selectedTokenGroup, tokenset == selectedTokenSet)$token %>% as.character()
-      updateAwesomeRadio(session, inputId = "tokeninput", choices = tokenlist, selected = unique(tokenlist)[1])
+      tokenlist <- filter(alltokens, 
+                          tokengroup == selectedTokenGroup, 
+                          tokenset == selectedTokenSet)$token %>% 
+                   as.character()
+      updateAwesomeRadio(session, inputId = "tokeninput", 
+                         choices = tokenlist, selected = unique(tokenlist)[1])
     }
   }, priority = -11)
+  
   # END ---------------------------------------------------------------------
   
   # highlight selected tokengroup -------------------------------------------
@@ -465,8 +521,6 @@ server <- function(input, output,session) {
                         words: []
                         }]
           });")
-          
-            
             
             delay(1, runjs(fun)) #needs delay for tokengroup change to register first
             })
@@ -481,7 +535,11 @@ server <- function(input, output,session) {
             selectedTokenGroup <- input$tokengroupinput
             selectedTokenSet <- input$tokensetinput
             tokengrouptext <- paste0("\\{", input$tokengroupinput, "\\}")
-            tokenlist <- filter(alltokens, tokengroup == selectedTokenGroup, tokenset == selectedTokenSet)$token %>% as.character()
+            tokenlist <- filter(alltokens, 
+                                tokengroup == selectedTokenGroup, 
+                                tokenset == selectedTokenSet)$token %>% 
+                         as.character()
+            
             tokenlist[tokenlist == "N/A"] <- ""
             for (i in 1:length(tokenlist)){
               x <- sub(tokengrouptext, tokenlist[i], x)
@@ -518,9 +576,14 @@ server <- function(input, output,session) {
   
   onclick("deletetokenset",
           {
-            alltokens <- filter(alltokens, !(tokengroup == input$tokengroupinput & tokenset == input$tokensetinput))
-            tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-            updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+            alltokens <- filter(alltokens, 
+                                !(tokengroup == input$tokengroupinput & tokenset == input$tokensetinput))
+            tokensetlist <- filter(alltokens, 
+                                   tokengroup == input$tokengroupinput)$tokenset %>% 
+                            as.character()
+            updateAwesomeRadio(session, inputId = "tokensetinput", 
+                               choices = unique(tokensetlist), 
+                               selected = unique(tokensetlist)[1])
           })
   # END ---------------------------------------------------------------------
   
@@ -538,18 +601,27 @@ server <- function(input, output,session) {
                               tokenset == input$tokensetinput)$token)
     
     
-    tokenToAdd <- data.frame(tokengroup = input$tokengroupinput, tokenset = paste("Tokenset", n_tokensets + 1), token = rep("N/A", n_tokens))
+    tokenToAdd <- data.frame(tokengroup = input$tokengroupinput, 
+                             tokenset = paste("Tokenset", n_tokensets + 1), 
+                             token = rep("N/A", n_tokens))
     
     # If tokenset exists already, replace it
-    alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+    alltokens <- filter(alltokens, 
+                        !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
     alltokens <- rbind(alltokens, tokenToAdd)
     
-    tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+    tokensetlist <- filter(alltokens, 
+                           tokengroup == input$tokengroupinput)$tokenset %>% 
+                    as.character()
+    updateAwesomeRadio(session, inputId = "tokensetinput", 
+                       choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
     
     
-    tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokeninput", choices = as.character(tokenlist), selected = NULL)
+    tokenlist <- filter(alltokens, 
+                        tokenset == unique(tokensetlist)[1])$token %>% 
+                 as.character()
+    updateAwesomeRadio(session, inputId = "tokeninput", 
+                       choices = as.character(tokenlist), selected = NULL)
     
     selectedtokengroup <- input$tokengroupinput
     removeUI(selector = ".tokeneditdiv", immediate = T) #.tokeneditdiv class is tokenset panel div
@@ -559,14 +631,25 @@ server <- function(input, output,session) {
       insertUI(selector = "#tokenedit", where = "beforeEnd",
                ui = {
                  column(12, align = "center",
-                        textInput("edittokengroupname", "Token Group Name", value = selectedtokengroup,width = "33%"),
-                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), function(i) {
+                        textInput("edittokengroupname", 
+                                  "Token Group Name", 
+                                  value = selectedtokengroup,
+                                  width = "33%"),
+                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), 
+                               function(i) {
                           column(12,
-                                 textInput(paste0("tokenset", i),"Token Set Name", value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i], width = "33%"),
-                                 lapply(seq_along(alltokens$token[alltokens$tokengroup == input$tokengroupinput & alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]),function(j){
+                                 textInput(paste0("tokenset", i),
+                                           "Token Set Name", 
+                                           value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i], 
+                                           width = "33%"),
+                                 lapply(seq_along(alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
+                                                                    alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]),
+                                        function(j){
                                    column(6,
-                                          textAreaInput(paste0("edittoken", i, j), paste("Token", j), value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
-                                                                                                                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]][j],
+                                          textAreaInput(paste0("edittoken", i, j), 
+                                                        paste("Token", j), 
+                                                        value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
+                                                                                alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]][j],
                                                         resize = "vertical"))}),
                                  class = "tokeneditdiv")}),
                         column(12,
@@ -589,7 +672,8 @@ server <- function(input, output,session) {
     alltokens<-rbind(alltokens, tokenToAdd)
     
     tokensetlist<- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+    updateAwesomeRadio(session, inputId = "tokensetinput", 
+                       choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
     
     
     tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
@@ -603,20 +687,31 @@ server <- function(input, output,session) {
       insertUI(selector = "#tokenedit", where = "beforeEnd",
                ui = {
                  column(12, align = "center",
-                        textInput("edittokengroupname", "Token Group Name", value = selectedtokengroup, width = "33%"),
-                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), function(i) {
+                        textInput("edittokengroupname", "Token Group Name",
+                                  value = selectedtokengroup, 
+                                  width = "33%"),
+                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), 
+                               function(i) {
                           column(12,
-                                 textInput(paste0("tokenset",i),"Token Set Name",value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i] ,width = "33%"),
-                                 lapply(1:length(alltokens$token[alltokens$tokengroup == input$tokengroupinput & alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]),function(j){
+                                 textInput(paste0("tokenset", i), 
+                                           "Token Set Name",
+                                           value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i] ,
+                                           width = "33%"),
+                                 lapply(1:length(alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
+                                                                alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]),
+                                        function(j){
                                    column(6,
-                                          textAreaInput(paste0("edittoken", i, j), paste("Token", j), value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
-                                                                                                                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]][j],
+                                          textAreaInput(paste0("edittoken", i, j), 
+                                                        paste("Token", j), 
+                                                        value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
+                                                                                alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]][j],
                                                         resize = "vertical"))}),
                                  class = "tokeneditdiv")}),
                         column(12,
                                actionButton("addtokensetedit", "Add Token Set"),
                                actionButton("addtokenedit", "Add Token"),
-                               actionButton("savetokenedit", label = "Save")), class = "tokeneditdiv", id = "tokeneditdiv")
+                               actionButton("savetokenedit", label = "Save")), 
+                        class = "tokeneditdiv", id = "tokeneditdiv")
                }, session = session, immediate = T)
     }
   })
@@ -627,7 +722,9 @@ server <- function(input, output,session) {
   # Create and add covariate tokens  ----------------------------------------
   
   onclick("addcovs", {
-          tokenTypes <- data.frame(tokengroup = input$tokengroupinput, tokenset = input$covtypes, stringsAsFactors = FALSE)
+          tokenTypes <- data.frame(tokengroup = input$tokengroupinput, 
+                                   tokenset = input$covtypes, 
+                                   stringsAsFactors = FALSE)
           x <- input$ace
           a <- strsplit(x,"\n")[[1]]
           covlist <- strsplit(a[startsWith(a, "$INPUT")], "\\s+")[[1]][-1]
@@ -638,7 +735,11 @@ server <- function(input, output,session) {
             
             if (input$center == T){
               
-              lookup <- data.frame(tokenset = rep(c("None", "Linear", "Power", "Exponential", "Proportional"), each = 2),
+              lookup <- data.frame(tokenset = rep(c("None", 
+                                                    "Linear", 
+                                                    "Power", 
+                                                    "Exponential",
+                                                    "Proportional"), each = 2),
                                    token = c("N/A",
                                             "N/A",
                                             paste0("+(", input$cov, "-", median, ")*THETA([1])"),
@@ -648,14 +749,19 @@ server <- function(input, output,session) {
                                             paste0("*exp((", input$cov, "-", median, ")*THETA([1]))"),
                                             paste0("(-50,.001,50);", input$tokengroupinput),
                                             paste0("*(1+(", input$cov, "-", median, ")*THETA([1]))"),
-                                            paste0("(-100,.001,100);", input$tokengroupinput)), stringsAsFactors=FALSE)
+                                            paste0("(-100,.001,100);", input$tokengroupinput)), 
+                                   stringsAsFactors=FALSE)
               
             }
           }
           
           if (input$center == F){
             
-            lookup <- data.frame(tokenset = rep(c("None", "Linear", "Power", "Exponential", "Proportional"), each = 2),
+            lookup <- data.frame(tokenset = rep(c("None", 
+                                                  "Linear", 
+                                                  "Power", 
+                                                  "Exponential", 
+                                                  "Proportional"), each = 2),
                                  token= c("N/A",
                                           "N/A",
                                           paste0("+(", input$cov, ")*THETA([1])"),
@@ -665,7 +771,8 @@ server <- function(input, output,session) {
                                           paste0("*exp(", input$cov, ")*THETA([1])"),
                                           paste0("(-100,.001,100);", input$tokengroupinput),
                                           paste0("*(1+", input$cov, "*THETA([1]))"),
-                                          paste0("(-100,.001,100);", input$tokengroupinput)), stringsAsFactors = FALSE)
+                                          paste0("(-100,.001,100);", input$tokengroupinput)), 
+                                 stringsAsFactors = FALSE)
             
           }
           
@@ -673,17 +780,30 @@ server <- function(input, output,session) {
           
           
           
-          tokenToAdd <- merge(tokenTypes, lookup, by = "tokenset") %>% select(tokengroup, tokenset, token)
+          tokenToAdd <- merge(tokenTypes, lookup, by = "tokenset") %>% 
+            select(tokengroup, tokenset, token)
           
           # If tokenset exists already, replace it
-          alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+          alltokens <- filter(alltokens, 
+                              !(tokengroup %in% tokenToAdd$tokengroup & 
+                                  tokenset %in% tokenToAdd$tokenset))
           alltokens <-rbind(alltokens, tokenToAdd)
           
-          tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-          updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+          tokensetlist <- filter(alltokens, 
+                                 tokengroup == input$tokengroupinput)$tokenset %>% 
+            as.character()
+          updateAwesomeRadio(session, 
+                             inputId = "tokensetinput", 
+                             choices = unique(tokensetlist), 
+                             selected = unique(tokensetlist)[1])
           
-          tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-          updateAwesomeRadio(session, inputId = "tokeninput", choices = as.character(tokenlist), selected = NULL)
+          tokenlist <- filter(alltokens, 
+                              tokenset == unique(tokensetlist)[1])$token %>% 
+            as.character()
+          updateAwesomeRadio(session, 
+                             inputId = "tokeninput", 
+                             choices = as.character(tokenlist), 
+                             selected = NULL)
           hide("Covariate", anim = T)
           }
   )
@@ -696,7 +816,10 @@ server <- function(input, output,session) {
   onclick("addetas",
           {
             tokenTypes <- data.frame(tokengroup = input$tokengroupinput, tokenset = input$etatypes)
-            lookup <- data.frame(tokenset = rep(c("None", "Normal", "Logarithmic", "Normal (Proportional)"), each=2),
+            lookup <- data.frame(tokenset = rep(c("None", 
+                                                  "Normal", 
+                                                  "Logarithmic", 
+                                                  "Normal (Proportional)"), each=2),
                                  token= c("N/A",
                                           "N/A",
                                           paste0("+ETA([1])"),
@@ -704,18 +827,31 @@ server <- function(input, output,session) {
                                           paste0("*exp(ETA([1]))"),
                                           paste0("(0.01);", input$tokengroupinput),
                                           paste0("*(1+ETA([1]))"),
-                                          paste0("(0.01);", input$tokengroupinput)), stringsAsFactors = FALSE)
-            tokenToAdd <- merge(tokenTypes, lookup, by = "tokenset") %>% select(tokengroup, tokenset, token)
-            alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+                                          paste0("(0.01);", input$tokengroupinput)), 
+                                 stringsAsFactors = FALSE)
+            tokenToAdd <- merge(tokenTypes, lookup, by = "tokenset") %>% 
+              select(tokengroup, tokenset, token)
+            alltokens <- filter(alltokens, 
+                                !(tokengroup %in% tokenToAdd$tokengroup & 
+                                    tokenset %in% tokenToAdd$tokenset))
             
             alltokens <- rbind(alltokens, tokenToAdd)
             
-            tokensetlist<- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-            updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+            tokensetlist<- filter(alltokens, 
+                                  tokengroup == input$tokengroupinput)$tokenset %>% 
+              as.character()
+            updateAwesomeRadio(session, 
+                               inputId = "tokensetinput", 
+                               choices = unique(tokensetlist), 
+                               selected = unique(tokensetlist)[1])
             
             
-            tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-            updateAwesomeRadio(session, inputId = "tokeninput", choices = as.character(tokenlist), selected = NULL)
+            tokenlist <- filter(alltokens, 
+                                tokenset == unique(tokensetlist)[1])$token %>% 
+              as.character()
+            updateAwesomeRadio(session, inputId = "tokeninput", 
+                               choices = as.character(tokenlist), 
+                               selected = NULL)
             hide("ETA", anim = T)
           }
   )
@@ -727,24 +863,40 @@ server <- function(input, output,session) {
   onclick("addeps",
           {
             tokenTypes <- data.frame(tokengroup = input$tokengroupinput, tokenset = input$epstypes)
-            lookup <- data.frame(tokenset = rep(c("Additive", "Proportional", "Additive+Proportional"), each=2),
+            lookup <- data.frame(tokenset = rep(c("Additive", 
+                                                  "Proportional", 
+                                                  "Additive+Proportional"), each=2),
                                  token = c(paste0("Y=F+EPS([1])"),
                                           "(0.01); Additive",
                                           paste0("Y=F*(1+EPS([1]))"),
                                           "(0.01); Proportional",
                                           paste0("Y=F*(1+EPS([1]))+EPS([2])"),
-                                          "(0.01); Additive \n (0.01);Proportional"), stringsAsFactors = FALSE)
-            tokenToAdd <-merge(tokenTypes, lookup, by = "tokenset") %>% select(tokengroup, tokenset, token)
-            alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+                                          "(0.01); Additive \n (0.01);Proportional"), 
+                                 stringsAsFactors = FALSE)
+            tokenToAdd <-merge(tokenTypes, lookup, by = "tokenset") %>% 
+              select(tokengroup, tokenset, token)
+            alltokens <- filter(alltokens, 
+                                !(tokengroup %in% tokenToAdd$tokengroup & 
+                                    tokenset %in% tokenToAdd$tokenset))
             
             alltokens <- rbind(alltokens, tokenToAdd)
             
-            tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-            updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+            tokensetlist <- filter(alltokens, 
+                                   tokengroup == input$tokengroupinput)$tokenset %>% 
+              as.character()
+            updateAwesomeRadio(session, 
+                               inputId = "tokensetinput", 
+                               choices = unique(tokensetlist), 
+                               selected = unique(tokensetlist)[1])
             
             
-            tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-            updateAwesomeRadio(session, inputId = "tokeninput",choices = as.character(tokenlist), selected = NULL)
+            tokenlist <- filter(alltokens, 
+                                tokenset == unique(tokensetlist)[1])$token %>% 
+              as.character()
+            updateAwesomeRadio(session, 
+                               inputId = "tokeninput",
+                               choices = as.character(tokenlist), 
+                               selected = NULL)
             
             hide("EPS", anim = T)
           }
@@ -766,8 +918,10 @@ server <- function(input, output,session) {
               cmtn <- which(e == input$selectcmt)
               ncmts <- length(e)
               
-              tokenTypes <- data.frame(tokengroup = input$tokengroupinput, tokenset = c("None", paste0("+", 1:input$ncmt, "cmt")))
-              lookup <- data.frame(tnumber = rep(c(1, 2, 3), 4), tokenset = rep(c("None", "+1cmt", "+2cmt", "+3cmt"), each = 3),
+              tokenTypes <- data.frame(tokengroup = input$tokengroupinput, 
+                                       tokenset = c("None", paste0("+", 1:input$ncmt, "cmt")))
+              lookup <- data.frame(tnumber = rep(c(1, 2, 3), 4), 
+                                   tokenset = rep(c("None", "+1cmt", "+2cmt", "+3cmt"), each = 3),
                                    token = c("N/A", "N/A", "N/A",
                                             as.character(p1cmttext(input$selectcmt, cmtn, ncmts)[1]),
                                             as.character(p1cmttext(input$selectcmt, cmtn, ncmts)[2]),
@@ -777,17 +931,29 @@ server <- function(input, output,session) {
                                             "(0 10)\n(0 10)\n(0 10)\n(0 10)",
                                             as.character(p3cmttext(input$selectcmt, cmtn, ncmts)[1]),
                                             as.character(p3cmttext(input$selectcmt, cmtn, ncmts)[2]),
-                                            "(0 10)\n(0 10)\n(0 10)\n(0 10)\n(0 10)\n(0 10)"), stringsAsFactors = FALSE)
-              tokenToAdd <- merge(lookup, tokenTypes, by = "tokenset") %>% arrange(tokenset, tnumber) %>% select(tokengroup, tokenset, token)
-              alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+                                            "(0 10)\n(0 10)\n(0 10)\n(0 10)\n(0 10)\n(0 10)"), 
+                                   stringsAsFactors = FALSE)
+              tokenToAdd <- merge(lookup, tokenTypes, by = "tokenset") %>% 
+                arrange(tokenset, tnumber) %>% 
+                select(tokengroup, tokenset, token)
+              alltokens <- filter(alltokens, 
+                                  !(tokengroup %in% tokenToAdd$tokengroup & 
+                                      tokenset %in% tokenToAdd$tokenset))
               alltokens <- rbind(alltokens, tokenToAdd)
               
-              tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-              updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+              tokensetlist <- filter(alltokens, 
+                                     tokengroup == input$tokengroupinput)$tokenset %>% 
+                as.character()
+              updateAwesomeRadio(session, inputId = "tokensetinput", 
+                                 choices = unique(tokensetlist), 
+                                 selected = unique(tokensetlist)[1])
               
               
-              tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-              updateAwesomeRadio(session, inputId = "tokeninput", choices = as.character(tokenlist), selected = NULL)
+              tokenlist <- filter(alltokens, 
+                                  tokenset == unique(tokensetlist)[1])$token %>% 
+                as.character()
+              updateAwesomeRadio(session, inputId = "tokeninput", 
+                                 choices = as.character(tokenlist), selected = NULL)
               
               hide("Structure", anim = T)
             }
@@ -795,16 +961,24 @@ server <- function(input, output,session) {
   )
   
   onclick("addcustom",{
-    tokenToAdd <- data.frame(tokengroup = input$tokengroupinput, tokenset = "New Token", token = "N/A")
-    alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
+    tokenToAdd <- data.frame(tokengroup = input$tokengroupinput,
+                             tokenset = "New Token", token = "N/A")
+    alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & 
+                                       tokenset %in% tokenToAdd$tokenset))
     alltokens <-rbind(alltokens, tokenToAdd)
     
-    tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+    tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% 
+      as.character()
+    updateAwesomeRadio(session, inputId = "tokensetinput", 
+                       choices = unique(tokensetlist), 
+                       selected = unique(tokensetlist)[1])
     
     
-    tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokeninput", choices = as.character(tokenlist), selected = NULL)
+    tokenlist <- filter(alltokens, tokenset == unique(tokensetlist)[1])$token %>% 
+      as.character()
+    updateAwesomeRadio(session, inputId = "tokeninput", 
+                       choices = as.character(tokenlist), 
+                       selected = NULL)
     
     hide("Custom", anim = T)
   }
@@ -825,20 +999,30 @@ server <- function(input, output,session) {
       insertUI(selector="#tokenedit", where = "beforeEnd",
                ui = {
                  column(12, align = "center",
-                        textInput("edittokengroupname", "Token Group Name", value = selectedtokengroup, width = "33%"),
-                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), function(i) {
+                        textInput("edittokengroupname", 
+                                  "Token Group Name",
+                                  value = selectedtokengroup, 
+                                  width = "33%"),
+                        lapply(1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])), 
+                               function(i) {
                           column(12,
-                                 textInput(paste0("tokenset", i), "Token Set Name", value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i], width = "33%"),
-                                 lapply(1:length(alltokens$token[alltokens$tokengroup == input$tokengroupinput & alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]), function(j){
+                                 textInput(paste0("tokenset", i), 
+                                           "Token Set Name",
+                                           value = unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i], width = "33%"),
+                                 lapply(1:length(alltokens$token[alltokens$tokengroup == input$tokengroupinput & alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$tokengroupinput])[i]]), 
+                                        function(j){
                                    column(6,
-                                          textAreaInput(paste0("edittoken", i, j), paste("Token", j), value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
+                                          textAreaInput(paste0("edittoken", i, j), 
+                                                        paste("Token", j), 
+                                                        value = alltokens$token[alltokens$tokengroup == input$tokengroupinput & 
                                                                                                                            alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup==input$tokengroupinput])[i]][j],
                                                         resize = "vertical"))}),
                                  class = "tokeneditdiv")}),
                         column(12,
                                actionButton("addtokensetedit", "Add Token Set"),
                                actionButton("addtokenedit", "Add Token"),
-                               actionButton("savetokenedit", label = "Save")), class = "tokeneditdiv", id = "tokeneditdiv")
+                               actionButton("savetokenedit", label = "Save")), 
+                        class = "tokeneditdiv", id = "tokeneditdiv")
                }, session = session, immediate = T)
     }
   })
@@ -872,11 +1056,19 @@ server <- function(input, output,session) {
     
     updateTextAreaInput(session, "ace", value = x)
     
-    tokensetlist <- filter(alltokens, tokengroup == input$edittokengroupname)$tokenset %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokensetinput", choices = unique(tokensetlist), selected = unique(tokensetlist)[1])
+    tokensetlist <- filter(alltokens, 
+                           tokengroup == input$edittokengroupname)$tokenset %>% 
+                           as.character()
+    updateAwesomeRadio(session, inputId = "tokensetinput", 
+                       choices = unique(tokensetlist), 
+                       selected = unique(tokensetlist)[1])
     
-    tokenlist <- filter(alltokens, tokengroup == input$edittokengroupname, tokenset == unique(tokensetlist)[1])$token %>% as.character()
-    updateAwesomeRadio(session, inputId = "tokeninput", choices = unique(tokenlist), selected = unique(tokenlist)[1])
+    tokenlist <- filter(alltokens, tokengroup == input$edittokengroupname, 
+                        tokenset == unique(tokensetlist)[1])$token %>% 
+                        as.character()
+    updateAwesomeRadio(session, inputId = "tokeninput", 
+                       choices = unique(tokenlist), 
+                       selected = unique(tokenlist)[1])
     
     
     hide("tokeneditdiv", anim = T)
@@ -918,7 +1110,16 @@ server <- function(input, output,session) {
     CreateModel <- CreateModel 
     z <- Sys.time()
     nmods <- dim(allmods)[1]
-    a <- cbind(data.frame(Number = 1:nmods, Path = paste0("models/All/mod", 1:nmods, "/mod.ctl"), OFV="", Fitness="", S="", C="", NTHETA="", NETA="", NEPS="", allmods))
+    a <- cbind(data.frame(Number = 1:nmods, 
+                          Path = paste0("models/All/mod", 1:nmods, "/mod.ctl"), 
+                          OFV = "", 
+                          Fitness = "", 
+                          S = "", 
+                          C = "", 
+                          NTHETA = "", 
+                          NETA = "", 
+                          NEPS = "", 
+                          allmods))
     
     
     gz1 <- gzfile("Allmodsresults.csv.gz", "w")
@@ -958,9 +1159,10 @@ server <- function(input, output,session) {
           mods <- resultsdf[,1]
           match(allmodsresults$Number, mods)
           
-          #logic for below - match function finds the indices of allmodsresults in which the number equals the 
-          # value in mods. na.omit removes na values. 1,3,5,6 are columns to be updated
-          # right side !is.na is safegaurd for models that were run but have since been deleted before results were fetched
+          #logic for below - match function finds the indices of allmodsresults 
+          # in which the number equals the value in mods. na.omit removes na values. 
+          # 1,3,5,6 are columns to be updated right side !is.na is safegaurd for models 
+          # that were run but have since been deleted before results were fetched
           allmodsresults[na.omit(match(mods, allmodsresults$Number)), c(1, 3, 5, 6)] <- resultsdf[!is.na(match(mods, allmodsresults$Number)),]
           
           gz1 <- gzfile("Allmodsresults.csv.gz", "w")
@@ -975,7 +1177,8 @@ server <- function(input, output,session) {
       allmods1 <- data.frame ()
       allmodslist <-list()
       selecteddir <- input$selecteddir
-      mod.directories <- paste0("./models/", selecteddir, "/", list.files(paste0("./models/", selecteddir)))
+      mod.directories <- paste0("./models/", selecteddir, "/", 
+                                list.files(paste0("./models/", selecteddir)))
       
       nmods <- length(mod.directories)
       allmodslist <- lapply(mod.directories, RetrieveResultsEach)
@@ -985,7 +1188,10 @@ server <- function(input, output,session) {
     }
     
     
-    updateRadioGroupButtons(session, "selecteddir", selected = selecteddir, choices = list.dirs("./models", full.names = F, recursive = F))
+    updateRadioGroupButtons(session, "selecteddir", selected = selecteddir, 
+                            choices = list.dirs("./models", 
+                                                full.names = F, 
+                                                recursive = F))
     delay(100, runjs('$(".radiobtn").on("dragenter",function () {
                     y=$(this).find("input").val()
                     console.log("hi")
@@ -1242,9 +1448,10 @@ server <- function(input, output,session) {
     
     
     allmods1 <- rbind(allmods1, do.call(rbind, allmodslist))
-    allmods1 <- mutate(allmods1, Number = as.numeric(Number), Generation = mod.directories.max.gen$Generation) %>%
-      arrange(Number) %>%
-      select(Generation, Fitness)
+    allmods1 <- mutate(allmods1, Number = as.numeric(Number), 
+                       Generation = mod.directories.max.gen$Generation) %>%
+                arrange(Number) %>%
+                select(Generation, Fitness)
     GAProgress <- rbind(GAProgress, allmods1)
     
     
@@ -1296,7 +1503,9 @@ server <- function(input, output,session) {
     nmods <- dim(allmods)[1]
     nindiv <- 20
     if (nindiv > nmods) nindiv <- nmods
-    InitiateGA(nmods, nindiv, control = input$ace, alltokens = alltokens, allmods = allmods, seed = 10)
+    InitiateGA(nmods, nindiv, control = input$ace, 
+               alltokens = alltokens, allmods = allmods, 
+               seed = 10)
   })
   
   onclick("nextGA",{
@@ -1343,11 +1552,16 @@ server <- function(input, output,session) {
                       choices = c("Fitness", "Selection", "Crossover", "Mutation")),
     div(id = "Fitness",
         class = "GA-settings-div",
-        numericInput("THETA","Theta Penalty", value = 5, width = "60%"),
-        numericInput("ETA", "Eta Penalty", value = 5, width = "60%"),
-        numericInput("EPS", "Epsilon Penalty", value = 5, width = "60%"),
-        numericInput("covsuccess", "Successful Covariance", value = -10, width = "60%"),
-        numericInput("minsuccess", "Successful Minimization", value = -10, width = "60%")
+        numericInput("THETA","Theta Penalty", 
+                     value = 5, width = "60%"),
+        numericInput("ETA", "Eta Penalty", 
+                     value = 5, width = "60%"),
+        numericInput("EPS", "Epsilon Penalty", 
+                     value = 5, width = "60%"),
+        numericInput("covsuccess", "Successful Covariance", 
+                     value = -10, width = "60%"),
+        numericInput("minsuccess", "Successful Minimization", 
+                     value = -10, width = "60%")
         
         #         numericInput("covwarn","Covariance Warning",value = 0),
         #         numericInput("boundary","Parameter/s Near Boundary",value = 0),
@@ -1360,15 +1574,18 @@ server <- function(input, output,session) {
     ),
     div(id = "Selection",
         class = "GA-settings-div",
-        radioButtons("selectionmethod", "Selection Algorithm", choices = c("2-Way Tournament", "Scaled Roullette", "Rank Roullette"))
+        radioButtons("selectionmethod", "Selection Algorithm", 
+                     choices = c("2-Way Tournament", "Scaled Roullette", "Rank Roullette"))
     ),
     div(id = "Crossover",
         class = "GA-settings-div",
-        numericInput("crossoverrate", "Crossover Rate", value = 0.7, min = 0, max = 1, width = "60%")
+        numericInput("crossoverrate", "Crossover Rate", value = 0.7, 
+                     min = 0, max = 1, width = "60%")
     ),
     div(id = "Mutation",
         class = "GA-settings-div",
-        numericInput("mutationrate", "Mutation Rate", value = 0.05, min = 0, max = 1, width = "60%")
+        numericInput("mutationrate", "Mutation Rate", value = 0.05, 
+                     min = 0, max = 1, width = "60%")
     )
   ),
   size = "s",
@@ -1389,12 +1606,13 @@ server <- function(input, output,session) {
   
   # Edit control stream modal -----------------------------------------------
   
-  editcontrolstream <- modalDialog(fluidPage(actionButton("savecontrol", "Save"), textAreaInput("editcontrol",
-                                                                                              label = NULL,
-                                                                                              width = "100%",
-                                                                                              height = "200px",
-                                                                                              cols = NULL,
-                                                                                              value = "")))
+  editcontrolstream <- modalDialog(fluidPage(actionButton("savecontrol", "Save"), 
+                                             textAreaInput("editcontrol",
+                                                           label = NULL,
+                                                           width = "100%",
+                                                           height = "200px",
+                                                           cols = NULL,
+                                                           value = "")))
   
   
   onclick("savecontrol", {
@@ -1417,7 +1635,9 @@ server <- function(input, output,session) {
     
     CheckThenCreate(relpath, input$ace, alltokens, allmods)
     if (file.exists(file)){
-      updateTextAreaInput(session, "editcontrol", value = paste(readLines(file), collapse = "\n"))
+      updateTextAreaInput(session, "editcontrol", 
+                          value = paste(readLines(file), 
+                                        collapse = "\n"))
     }
     showModal(
       editcontrolstream
@@ -1474,25 +1694,37 @@ server <- function(input, output,session) {
   
   
   scm_table <- modalDialog(fluidPage(div(column(9,
-                                                 actionButton("openlocation3", "Open Model Location"),
-                                                 actionButton("startSCM", "Start SCM"),
+                                                 actionButton("openlocation3", 
+                                                              "Open Model Location"),
+                                                 actionButton("startSCM", 
+                                                              "Start SCM"),
                                                  DT::dataTableOutput('modeltable3'),
                                                  
-                                                 radioGroupButtons("selecteddir3", NULL, choices = c("All"), selected = "All")
+                                                 radioGroupButtons("selecteddir3", 
+                                                                   NULL, 
+                                                                   choices = c("All"), 
+                                                                   selected = "All")
                                                  
   )),
   div(column(3, tabsetPanel(id = "modelinfo3",
                             tabPanel("Plots3",
                                      bsCollapse(bsCollapsePanel("Covariate Model",
-                                                                actionButton("ranparvscov3", "ETAs vs Covariates"),
-                                                                actionButton("parvscov3", "Parameters vs Covariates"),
-                                                                actionButton("parvspar3", "Parameters vs Parameters"),
+                                                                actionButton("ranparvscov3", 
+                                                                             "ETAs vs Covariates"),
+                                                                actionButton("parvscov3", 
+                                                                             "Parameters vs Covariates"),
+                                                                actionButton("parvspar3", 
+                                                                             "Parameters vs Parameters"),
                                                                 
-                                                                actionButton("covscatter3", "Covariate Scatter Plots")),
+                                                                actionButton("covscatter3", 
+                                                                             "Covariate Scatter Plots")),
                                                 bsCollapsePanel("Goodness of Fit",
-                                                                actionButton("basicgof3", "Basic GOF"),
-                                                                actionButton("indplots3", "Individual Plots"),
-                                                                actionButton("dvpredipred3", "DV vs Pred, IPRED")),
+                                                                actionButton("basicgof3", 
+                                                                             "Basic GOF"),
+                                                                actionButton("indplots3", 
+                                                                             "Individual Plots"),
+                                                                actionButton("dvpredipred3", 
+                                                                             "DV vs Pred, IPRED")),
                                                 multiple = T, open = c("Covariate Model"))
                             ),
                             tabPanel("Parameters3",
@@ -1717,9 +1949,12 @@ server <- function(input, output,session) {
         if(!is.factor(x[, 1])){
           k <- k+1
           
-          a <- rbind(linmod(center(x[, 1]), as.numeric(as.character(y[, 1])), xlab = names(x), ylab = names(y)),
-                   expmod(center(x[, 1]), as.numeric(as.character(y[, 1])), xlab = names(x), ylab = names(y)),
-                   powmod(center2(x[, 1]), as.numeric(as.character(y[, 1])), xlab = names(x), ylab = names(y)))
+          a <- rbind(linmod(center(x[, 1]), as.numeric(as.character(y[, 1])),
+                            xlab = names(x), ylab = names(y)),
+                   expmod(center(x[, 1]), as.numeric(as.character(y[, 1])), 
+                          xlab = names(x), ylab = names(y)),
+                   powmod(center2(x[, 1]), as.numeric(as.character(y[, 1])),
+                          xlab = names(x), ylab = names(y)))
           all[[k]] <- a
         }
       }
