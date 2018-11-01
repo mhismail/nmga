@@ -9,9 +9,9 @@
 
 fitness <- function (results = data.frame(),
                      penalties=list(
-                     THETA=5,
-                     ETA=5,
-                     EPS=5,
+                     THETA=2,
+                     ETA=2,
+                     EPS=2,
                      cov.success=-10,
                      min.success=-10,
                      cov.warnings=0,

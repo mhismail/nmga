@@ -74,17 +74,31 @@ ui <- fluidPage(
               class = c("nav-bar-el")),
          span(actionButton("viewmod", "View Models", 
                            class = "nav-bar-button")),
-         span(actionButton("openGA", "Initiate Genetic Algorithm", 
+         span(actionButton("openGA", "Genetic Algorithm", 
                            class = "nav-bar-button")),
          span(actionButton("GAsettings", 
                            icon("gear", "fa-2x"), 
                            class = "nav-bar-button")),
          span(actionButton("openSCM", 
-                           "Initiate SCM", 
+                           "SCM", 
                            class = "nav-bar-button")),
          span(actionButton("SCMsettings", 
                            icon("gear", "fa-2x"), 
                            class = "nav-bar-button")),
+         span(actionButton("StopRun", "Stop Run", 
+                           icon("stop-circle", "fa-2x"),
+                           class="nav-bar-button",
+                           style = "display: none;")), ## need a way to stop run, need pause as well?
+         span(actionButton("PauseRun",
+                           "Pause Run",
+                           icon("pause-circle", "fa-2x"),
+                           class="nav-bar-button",
+                           style = "display: none;")), ## need a way to stop run, need pause as well?
+         span(actionButton("ResumeRun",
+                           "Resume Run",
+                           icon("play-circle", "fa-2x"),
+                           class="nav-bar-button",
+                           style = "display: none;")), 
          div(id = "new_project_div", style = "display: none;",
              span(h2("Control Stream", 
                      class = "nav-bar-button"),
@@ -123,6 +137,7 @@ ui <- fluidPage(
                                               "ETA",
                                               "EPS",
                                               "Structure", 
+                                              "Initials",
                                               "Custom"),
                                   selected = NULL)),
          column(12,
@@ -212,6 +227,23 @@ ui <- fluidPage(
                            actionButton("addeps",
                                         "Add Selected Token Sets")
                        ),
+                       div(id = "Initials",
+                           
+                           class = "tokentype",
+                           column(6,
+                                  numericInput("init_from",
+                                               "From",
+                                               value = 0 ),
+                                  numericInput("init_to",
+                                               "To",
+                                               value = 100 ),
+                                  selectInput("init_num",
+                                              "Number of Initial Estimates", 
+                                              choices = 2:10),
+                                  actionButton("addinitial",
+                                               "Add Selected Token Sets"))
+                           
+                           ),
                        div(id = "Structure",
                            class = "tokentype",
                            radioGroupButtons("strtypes",
@@ -284,6 +316,10 @@ server <- function(input, output,session) {
   
   
   # Define globals
+  status <- reactiveValues(GA_running = F,
+                           GA_paused = T,
+                 SCM_running = F)
+  
   alltokens <- data.frame(tokengroup = character(0), 
                          tokenset = character(0), 
                          token = character(0), 
@@ -293,6 +329,8 @@ server <- function(input, output,session) {
                             Fitness = numeric(0))
   
   f <- NULL
+  
+  
   onclick("dir", {
     directory <- choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
     if (is.na(directory)){
@@ -314,12 +352,12 @@ server <- function(input, output,session) {
     
     
     if (file.exists("alltokens.csv")){
-      alltokens <- read.csv("alltokens.csv", as.is = T)
+      alltokens <- read.csv("alltokens.csv", as.is = T, stringsAsFactors = F)
     }
     
     if (file.exists("Allmodsresults.csv.gz")){
       zz <- gzfile('Allmodsresults.csv.gz')   
-      allmods <<- read.csv(zz, stringsAsFactors = F)[-1:-9] #model phenotypes
+      allmods <<- read.csv(zz, stringsAsFactors = F,  as.is = T)[-1:-9] #model phenotypes
     }
     runjs({
       paste("$('#proj').text('Current Directory:", basename(directory), "')")
@@ -603,12 +641,13 @@ server <- function(input, output,session) {
     
     tokenToAdd <- data.frame(tokengroup = input$tokengroupinput, 
                              tokenset = paste("Tokenset", n_tokensets + 1), 
-                             token = rep("N/A", n_tokens))
+                             token = rep("N/A", n_tokens),
+                             stringsAsFactors = F)
     
     # If tokenset exists already, replace it
     alltokens <- filter(alltokens, 
                         !(tokengroup %in% tokenToAdd$tokengroup & tokenset %in% tokenToAdd$tokenset))
-    alltokens <- rbind(alltokens, tokenToAdd)
+    alltokens <- rbind(alltokens, tokenToAdd, stringsAsFactors = F)
     
     tokensetlist <- filter(alltokens, 
                            tokengroup == input$tokengroupinput)$tokenset %>% 
@@ -669,7 +708,7 @@ server <- function(input, output,session) {
     tokensets <- unique(filter(alltokens,tokengroup == input$tokengroupinput)$tokenset)
     tokenToAdd <-data.frame(tokengroup = input$tokengroupinput, tokenset = tokensets, token = "N/A")
     
-    alltokens<-rbind(alltokens, tokenToAdd)
+    alltokens<-rbind(alltokens, tokenToAdd, stringsAsFactors = F)
     
     tokensetlist<- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% as.character()
     updateAwesomeRadio(session, inputId = "tokensetinput", 
@@ -835,7 +874,7 @@ server <- function(input, output,session) {
                                 !(tokengroup %in% tokenToAdd$tokengroup & 
                                     tokenset %in% tokenToAdd$tokenset))
             
-            alltokens <- rbind(alltokens, tokenToAdd)
+            alltokens <- rbind(alltokens, tokenToAdd, stringsAsFactors = F)
             
             tokensetlist<- filter(alltokens, 
                                   tokengroup == input$tokengroupinput)$tokenset %>% 
@@ -879,7 +918,7 @@ server <- function(input, output,session) {
                                 !(tokengroup %in% tokenToAdd$tokengroup & 
                                     tokenset %in% tokenToAdd$tokenset))
             
-            alltokens <- rbind(alltokens, tokenToAdd)
+            alltokens <- rbind(alltokens, tokenToAdd, stringsAsFactors = F)
             
             tokensetlist <- filter(alltokens, 
                                    tokengroup == input$tokengroupinput)$tokenset %>% 
@@ -899,6 +938,53 @@ server <- function(input, output,session) {
                                selected = NULL)
             
             hide("EPS", anim = T)
+          }
+  )
+  # END ---------------------------------------------------------------------
+  
+  # Create and add initial estimates tokens  ----------------------------------------
+  
+  onclick("addinitial",
+          {
+            init_from <- input$init_from
+            init_to <- input$init_to
+            init_num <- as.numeric(input$init_num)
+            
+            initials <- round(seq(init_from, init_to, length.out = init_num), 1)
+            
+            
+            tokenToAdd <- data.frame(tokengroup = input$tokengroupinput, 
+                                     tokenset = initials, 
+                                     token = initials)
+
+
+            alltokens <- filter(alltokens, 
+                                !(tokengroup %in% tokenToAdd$tokengroup & 
+                                    tokenset %in% tokenToAdd$tokenset))
+
+            alltokens <- rbind(alltokens, tokenToAdd, stringsAsFactors = F)
+            
+
+            tokensetlist <- filter(alltokens, 
+                                   tokengroup == input$tokengroupinput)$tokenset %>% 
+              as.character()
+            updateAwesomeRadio(session, 
+                               inputId = "tokensetinput", 
+                               choices = unique(tokensetlist), 
+                               selected = unique(tokensetlist)[1])
+            
+            
+            tokenlist <- filter(alltokens, 
+                                tokenset == unique(tokensetlist)[1])$token %>% 
+              as.character()
+            
+            print(tokenlist)
+            updateAwesomeRadio(session, 
+                               inputId = "tokeninput",
+                               choices = as.character(tokenlist), 
+                               selected = NULL)
+            
+            hide("Initials", anim = T)
           }
   )
   # END ---------------------------------------------------------------------
@@ -939,7 +1025,7 @@ server <- function(input, output,session) {
               alltokens <- filter(alltokens, 
                                   !(tokengroup %in% tokenToAdd$tokengroup & 
                                       tokenset %in% tokenToAdd$tokenset))
-              alltokens <- rbind(alltokens, tokenToAdd)
+              alltokens <- rbind(alltokens, tokenToAdd, stringsAsFactors = F)
               
               tokensetlist <- filter(alltokens, 
                                      tokengroup == input$tokengroupinput)$tokenset %>% 
@@ -965,7 +1051,7 @@ server <- function(input, output,session) {
                              tokenset = "New Token", token = "N/A")
     alltokens <- filter(alltokens, !(tokengroup %in% tokenToAdd$tokengroup & 
                                        tokenset %in% tokenToAdd$tokenset))
-    alltokens <-rbind(alltokens, tokenToAdd)
+    alltokens <-rbind(alltokens, tokenToAdd, stringsAsFactors = F)
     
     tokensetlist <- filter(alltokens, tokengroup == input$tokengroupinput)$tokenset %>% 
       as.character()
@@ -1033,18 +1119,28 @@ server <- function(input, output,session) {
   # Save tokens after editing  ----------------------------------------------
   
   onclick("savetokenedit",{
+    
+    alltokens[] <- lapply(alltokens, as.character)
     alltokens$tokengroup[alltokens$tokengroup == input$tokengroupinput] <- input$edittokengroupname
     
+
     for (i in 1:length(unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname]))){
       alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname &
                            alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]] <- input[[paste0("tokenset", i)]]
       
-      
+
       for (j in 1:length(alltokens$token[alltokens$tokengroup == input$edittokengroupname & alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]])){
         alltokens$token[alltokens$tokengroup == input$edittokengroupname & 
                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]][j] <- input[[paste0("edittoken", i, j
                           )]]
-      }
+print(alltokens$token[alltokens$tokengroup == input$edittokengroupname & 
+                        alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]])      }
+      print(j)
+      print(alltokens$tokengroup == input$edittokengroupname)
+      print("boog")
+      print(alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i])
+      
+      
       
     }
     
@@ -1140,12 +1236,12 @@ server <- function(input, output,session) {
     
     if (selecteddir == "All"){
       zz = gzfile('Allmodsresults.csv.gz')   
-      allmodsresults <- read.csv(zz, stringsAsFactors = F)
+      allmodsresults <- read.csv(zz, as.is = T, stringsAsFactors = F)
       # allmodsresults <- read.csv("Allmodsresults.csv")
       
       #if (models have been run since laste refresh)
       if (file.exists("modelruntemp.csv") & file.info("modelruntemp.csv")$size > 0){ 
-        modelsran <- read.csv("modelruntemp.csv", header = F) %>% filter(!duplicated(V1))
+        modelsran <- read.csv("modelruntemp.csv",  as.is = T, header = F) %>% filter(!duplicated(V1))
         checkpresent <- file.exists(paste0(modelsran[,1], "/results/PsN_execute_plots.R"))
         resultspresent <- modelsran[checkpresent,]
         if (dim(resultspresent)[1] > 0){
@@ -1254,7 +1350,7 @@ server <- function(input, output,session) {
     
     phen <- read.csv(paste0(relpath, "/mod.csv"), as.is = T)[-(1:9)]
     zz <- gzfile('Allmodsresults.csv.gz')   
-    allmods <- read.csv(zz, stringsAsFactors = F)[-1:-9]
+    allmods <- read.csv(zz, as.is = T, stringsAsFactors = F)[-1:-9]
     # allmods <- read.csv("Allmodsresults.csv",as.is=T)[-1:-9]
     
     similarmods <- which(apply(allmods, 1, function(x) sum( x == phen) >= (dim(allmods)[2] - 1)))
@@ -1374,6 +1470,33 @@ server <- function(input, output,session) {
   observeEvent(input$startGA, {invalidate$future = isolate(invalidate$future) + 1})
   observeEvent(input$nextGA, {invalidate$future = isolate(invalidate$future) + 1})
   
+  observeEvent(status$GA_running,
+               if (status$GA_running == T){
+                 show("PauseRun")
+                 show("StopRun")
+  })
+  
+  onclick("StopRun",{
+          status$GA_running = F
+          status$GA_paused = T
+          hide("PauseRun")
+          hide("StopRun")
+          hide("ResumeRun")
+  })
+  
+  onclick("PauseRun",{
+    status$GA_paused = T
+    hide("PauseRun")
+    show("ResumeRun")
+  })
+  
+  onclick("PauseRun",{
+    status$GA_paused = F
+    invalidate$future
+    show("PauseRun")
+    hide("ResumeRun")
+  })
+  
   
   observeEvent({
     invalidate$future
@@ -1401,7 +1524,14 @@ server <- function(input, output,session) {
       
       if(resolved(f)){
         runjs('$("#refreshGAmods").click()')
-        runjs('$("#nextGA").click()')
+        
+
+        if(status$GA_running & !status$GA_paused){
+        maxgen <- NextGA(alltokens, control = input$ace, allmods = allmods)
+        invalidate$future = isolate(invalidate$future) + 1
+        updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
+        }
+        
       }
     }
     
@@ -1418,7 +1548,15 @@ server <- function(input, output,session) {
     
     allmods1 <- data.frame ()
     allmodslist <- list()
-    mod.directories <- read.csv("GAgens.csv", as.is = T)%>%
+    mod.directories <- read.csv("GAgens.csv", as.is = T) %>%
+      filter(Generation == as.numeric(input$selectedgen))
+
+    
+    print(mod.directories)
+    maxgen <- max(as.numeric(mod.directories$Generation))
+    print(maxgen)
+    
+    mod.directories <- read.csv("GAgens.csv", as.is = T) %>%
       filter(Generation == as.numeric(input$selectedgen)) %>% select(Dir)
     
     
@@ -1429,7 +1567,9 @@ server <- function(input, output,session) {
     allmods1 <- mutate(allmods1, Number = as.numeric(Number)) %>% arrange(Number)
     
     
+    # updateRadioGroupButtons(session, "selectedgen", choices = 1)
     allmods1
+    
     
     
   })
@@ -1458,6 +1598,7 @@ server <- function(input, output,session) {
   })
   
   output$GAtable <- DT::renderDataTable({
+    print(GAmods)
     GAmods()
   },#filter = 'top',
   options = list(
@@ -1483,6 +1624,7 @@ server <- function(input, output,session) {
     GAmodsAllGensGrouped <- group_by(GAProgress,Generation)
     summary <- summarize(GAmodsAllGensGrouped, meanfit = mean(as.numeric(Fitness),na.rm=T), 
                          minfit = min(Fitness, na.rm=T))
+    write.csv(GAProgress, "GA_results.csv", row.names = F)
     
     ggplot(summary, aes(x=Generation,y=minfit), color="blue") + 
       ylim(min(summary$minfit), mean(summary$minfit)*1.1) + 
@@ -1497,11 +1639,14 @@ server <- function(input, output,session) {
   })
   
   onclick("startGA", {
+    status$GA_running <- T
+    status$GA_paused <- F
+    
     GAProgress <- data.frame (Generation = numeric(0), 
                               Fitness = numeric(0))
     
     nmods <- dim(allmods)[1]
-    nindiv <- 20
+    nindiv <- 38
     if (nindiv > nmods) nindiv <- nmods
     InitiateGA(nmods, nindiv, control = input$ace, 
                alltokens = alltokens, allmods = allmods, 
@@ -1509,7 +1654,8 @@ server <- function(input, output,session) {
   })
   
   onclick("nextGA",{
-    
+    status$GA_running <- T
+    status$GA_paused <- F
     maxgen <- NextGA(alltokens, control = input$ace, allmods = allmods)
     updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
   })
@@ -1749,7 +1895,7 @@ server <- function(input, output,session) {
     a <- strsplit(x, "\n")[[1]]
     datapath <- strsplit(a[startsWith(a, "$DATA")], "\\s+")[[1]][2]
     
-    read.csv(datapath)
+    read.csv(datapath, as.is = T)
   })
   
   output$data <- DT::renderDataTable({
@@ -1804,7 +1950,7 @@ server <- function(input, output,session) {
     etaSHR <-  seq(as.numeric(final$shrinkage_eta[2]) + 1,
                    as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
     
-    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"))
+    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"), as.is = T)
     
     THETA <- rawResults[thetaindices] 
     
@@ -1856,7 +2002,7 @@ server <- function(input, output,session) {
     etaSHR <- seq(as.numeric(final$shrinkage_eta[2]) + 1,
                    as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
     
-    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"))
+    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"), as.is = T)
     
     OMEGA <- rawResults[omegaindices] 
     OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] * 100
@@ -1900,7 +2046,7 @@ server <- function(input, output,session) {
     etaSHR <- seq(as.numeric(final$shrinkage_eta[2]) + 1,
                    as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
     
-    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"))
+    rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"), as.is = T)
     
     THETA <- rawResults[thetaindices] 
     THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices] * 100)
