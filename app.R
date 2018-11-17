@@ -330,6 +330,8 @@ server <- function(input, output,session) {
   
   f <- NULL
   
+  summary <- data.frame(Generation = numeric(), meanfit = numeric(), minfit = numeric())
+  
   
   onclick("dir", {
     directory <- choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
@@ -359,6 +361,13 @@ server <- function(input, output,session) {
       zz <- gzfile('Allmodsresults.csv.gz')   
       allmods <<- read.csv(zz, stringsAsFactors = F,  as.is = T)[-1:-9] #model phenotypes
     }
+    
+    if (file.exists("GA_results.csv")){
+      summary <- read.csv("GA_results.csv", stringsAsFactors = F,  as.is = T)
+
+    }
+    
+    
     runjs({
       paste("$('#proj').text('Current Directory:", basename(directory), "')")
     })
@@ -978,7 +987,6 @@ server <- function(input, output,session) {
                                 tokenset == unique(tokensetlist)[1])$token %>% 
               as.character()
             
-            print(tokenlist)
             updateAwesomeRadio(session, 
                                inputId = "tokeninput",
                                choices = as.character(tokenlist), 
@@ -1133,12 +1141,7 @@ server <- function(input, output,session) {
         alltokens$token[alltokens$tokengroup == input$edittokengroupname & 
                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]][j] <- input[[paste0("edittoken", i, j
                           )]]
-print(alltokens$token[alltokens$tokengroup == input$edittokengroupname & 
-                        alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]])      }
-      print(j)
-      print(alltokens$tokengroup == input$edittokengroupname)
-      print("boog")
-      print(alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i])
+
       
       
       
@@ -1523,14 +1526,16 @@ print(alltokens$token[alltokens$tokengroup == input$edittokengroupname &
       }
       
       if(resolved(f)){
+        if(status$GA_running & !status$GA_paused){
+          maxgen <- NextGA(alltokens, control = input$ace, allmods = allmods)
+          invalidate$future = isolate(invalidate$future) + 1
+          updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
+        }
+        
         runjs('$("#refreshGAmods").click()')
         
 
-        if(status$GA_running & !status$GA_paused){
-        maxgen <- NextGA(alltokens, control = input$ace, allmods = allmods)
-        invalidate$future = isolate(invalidate$future) + 1
-        updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
-        }
+
         
       }
     }
@@ -1552,10 +1557,8 @@ print(alltokens$token[alltokens$tokengroup == input$edittokengroupname &
       filter(Generation == as.numeric(input$selectedgen))
 
     
-    print(mod.directories)
     maxgen <- max(as.numeric(mod.directories$Generation))
-    print(maxgen)
-    
+
     mod.directories <- read.csv("GAgens.csv", as.is = T) %>%
       filter(Generation == as.numeric(input$selectedgen)) %>% select(Dir)
     
@@ -1598,7 +1601,6 @@ print(alltokens$token[alltokens$tokengroup == input$edittokengroupname &
   })
   
   output$GAtable <- DT::renderDataTable({
-    print(GAmods)
     GAmods()
   },#filter = 'top',
   options = list(
@@ -1620,14 +1622,42 @@ print(alltokens$token[alltokens$tokengroup == input$edittokengroupname &
   ), server = F)
   
   output$GAPlot <- renderPlot({
-    GAProgress <<- GAmodsAllGens()
-    GAmodsAllGensGrouped <- group_by(GAProgress,Generation)
-    summary <- summarize(GAmodsAllGensGrouped, meanfit = mean(as.numeric(Fitness),na.rm=T), 
+    input$refreshGAmods
+    
+    # GAProgress <<- GAmodsAllGens()
+    # GAmodsAllGensGrouped <- group_by(GAProgress,Generation)
+    # summary <- summarize(GAmodsAllGensGrouped, meanfit = mean(as.numeric(Fitness),na.rm=T), 
+    #                      minfit = min(Fitness, na.rm=T))
+    
+    mod.directories <- read.csv("GAgens.csv", as.is = T) %>%
+      filter(Generation >= max(Generation-1, na.rm=T) | !(Generation %in% summary$Generation))
+    
+  
+    
+    allmods1 <- data.frame ()
+    allmodslist <- list()
+
+    
+    allmodslist <- lapply(paste0("./", mod.directories$Dir), RetrieveResultsEach)
+    
+    
+    allmods1 <- rbind(allmods1, do.call(rbind, allmodslist))
+    allmods1 <- mutate(allmods1, Number = as.numeric(Number), 
+                       Generation = mod.directories$Generation) %>%
+      arrange(Number) %>%
+      select(Generation, Fitness)
+    
+    GAmodsAllGensGrouped <- group_by(allmods1,Generation)
+    summary_new <- summarize(GAmodsAllGensGrouped, meanfit = mean(as.numeric(Fitness),na.rm=T), 
                          minfit = min(Fitness, na.rm=T))
-    write.csv(GAProgress, "GA_results.csv", row.names = F)
+    
+    summary <<- rbind(filter(summary, !(Generation %in% summary_new$Generation)), summary_new)
+    
+    write.csv(summary, "GA_results.csv", row.names = F)
+    
     
     ggplot(summary, aes(x=Generation,y=minfit), color="blue") + 
-      ylim(min(summary$minfit), mean(summary$minfit)*1.1) + 
+      ylim(min(summary$minfit), max(summary$minfit)*1.1) + 
       geom_line() + 
       geom_line(aes(y=meanfit), color="red") 
   })
@@ -1646,11 +1676,11 @@ print(alltokens$token[alltokens$tokengroup == input$edittokengroupname &
                               Fitness = numeric(0))
     
     nmods <- dim(allmods)[1]
-    nindiv <- 38
+    nindiv <- 20
     if (nindiv > nmods) nindiv <- nmods
     InitiateGA(nmods, nindiv, control = input$ace, 
                alltokens = alltokens, allmods = allmods, 
-               seed = 10)
+               seed = 450) #20
   })
   
   onclick("nextGA",{

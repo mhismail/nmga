@@ -103,7 +103,9 @@ table.dataTable tbody tr {
 td { white-space: nowrap; }
 
 #ace {
-	height: 85vh;
+    height: 85vh;
+    font-size: 18px;
+    color: #000;
 }
 
 #previewtext {
