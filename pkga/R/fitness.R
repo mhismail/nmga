@@ -5,15 +5,15 @@
 #' @param results data.frame containing the results of a model run
 #' @param penalties List containing penalty coefficients
 #' @export
-#' 
+#' v
 
 fitness <- function (results = data.frame(),
                      penalties=list(
-                     THETA=2,
-                     ETA=2,
-                     EPS=2,
+                     THETA=5,
+                     ETA=5,
+                     EPS=5,
                      cov.success=-10,
-                     min.success=-10,
+                     min.success=-20,
                      cov.warnings=0,
                      boundary=0,
                      rounding=0,
