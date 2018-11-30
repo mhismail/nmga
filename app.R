@@ -1142,7 +1142,7 @@ server <- function(input, output,session) {
                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]][j] <- input[[paste0("edittoken", i, j
                           )]]
 
-      
+      }
       
       
     }
