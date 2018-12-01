@@ -1669,7 +1669,7 @@ server <- function(input, output,session) {
     )
     
     maxgen <- max(summary$Generation)
-    updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
+    updateRadioGroupButtons(session, "selectedgen", choices = 1:max(maxgen,1))
   })
   
   onclick("startGA", {
@@ -1680,7 +1680,7 @@ server <- function(input, output,session) {
                               Fitness = numeric(0))
     
     nmods <- dim(allmods)[1]
-    nindiv <- 20
+    nindiv <- 38
     if (nindiv > nmods) nindiv <- nmods
     InitiateGA(nmods, nindiv, control = input$ace, 
                alltokens = alltokens, allmods = allmods, 
