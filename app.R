@@ -14,6 +14,7 @@ if (!require("xpose4")) install.packages("xpose4")
 if (!require("gsubfn")) install.packages("gsubfn")
 if (!require("ggplot2")) install.packages("ggplot2")
 if (!require("future")) install.packages("future")
+if (!require("tcltk")) install.packages("tcltk")
 if (!require("pkga")){
   if (!require("devtools")) install.packages("devtools")
   library(devtools)
@@ -25,6 +26,9 @@ if (!require("pkga")){
 
 #Set plot theme
 theme_set(theme_bw())
+
+# Get OS
+OS <- Sys.info()['sysname']
 
 # InitiateSCM <- function (path,control=NULL,alltokens=NULL,allmods=NULL){
 #   results_dir <- "SCM"
@@ -334,7 +338,12 @@ server <- function(input, output,session) {
   
   
   onclick("dir", {
-    directory <- choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
+    if(exists('utils::choose.dir')){
+      directory <- choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
+    } else{
+      directory <- tk_choose.dir("M:\\Users\\mhismail-shared\\Rprogramming\\genetic algorithm\\")
+    }
+    
     if (is.na(directory)){
       directory <- getwd()
     }
@@ -374,7 +383,11 @@ server <- function(input, output,session) {
   })
   
   onclick("proj",{
-    shell(gsub("/", "\\\\", paste("explorer", getwd())))
+    if(OS == "Windows"){
+      shell(gsub("/", "\\\\", paste("explorer", getwd())))
+    } else{
+      system(paste("xdg-open", getwd()))
+    }
   }
   )
   
@@ -1342,8 +1355,11 @@ server <- function(input, output,session) {
     path <- as.character(all[all$Number == input$modeltable_selected[1], 2])
     relpath <- sub("/mod.ctl", "", path)
     CheckThenCreate(relpath, input$ace, alltokens, allmods)
-    shell(gsub("/", "\\\\", paste("explorer", relpath)))
-    
+    if(OS == "Windows"){
+      shell(gsub("/", "\\\\", paste("explorer", relpath)))
+    }else{
+      system(paste("xdg-open", relpath))
+    }
   })
   
   onclick("addsimilar", {
@@ -1510,7 +1526,7 @@ server <- function(input, output,session) {
       f <<- future({
         b <- 1
         while(length(b) > 0){
-          a <- shell("tasklist /v",intern=T)
+          a <- shell("tasklist /v",intern=T) # Needs Linux version
           b <- as.vector(na.omit(str_extract(a, "mod[0-9]* - execute")))
         }}) %plan% multiprocess
       invalidate$nextGA <- isolate(invalidate$nextGA) + 1})
@@ -2126,7 +2142,10 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(ranpar.vs.cov(xpdb))
             dev.off()
-            shell("etavscov.pdf", wait = F)
+            if(OS == "Windows"){
+              shell("etavscov.pdf", wait = F)
+            }
+            
             setwd(homepath)
           })
   
@@ -2146,7 +2165,9 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(parm.vs.cov(xpdb))
             dev.off()
-            shell("parvscov.pdf", wait = F)
+            if(OS == "Windows"){
+              shell("parvscov.pdf", wait = F)
+            }
             setwd(homepath)
           })
   
@@ -2166,7 +2187,10 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(parm.vs.parm(xpdb))
             dev.off()
-            shell("parvspar.pdf", wait = F)
+            if(OS == "Windows"){
+              shell("parvspar.pdf", wait = F)
+            }
+            
             setwd(homepath)
           })
   
@@ -2187,7 +2211,10 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(basic.gof(xpdb))
             dev.off()
-            shell("basicGOF.pdf", wait = F)
+            
+            if(OS == "Windows"){
+              shell("basicGOF.pdf", wait = F)
+            }
             setwd(homepath)
           })
   
@@ -2207,7 +2234,9 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(ind.plots(xpdb, logy = T))
             dev.off()
-            shell("indplots.pdf", wait = F)
+            if(OS == "Windows"){
+              shell("indplots.pdf", wait = F)
+            }
             setwd(homepath)
           })
   
@@ -2227,7 +2256,10 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(dv.vs.pred.ipred(xpdb))
             dev.off()
-            shell("dvpredipred.pdf", wait = F)
+            
+            if(OS == "Windows"){
+              shell("dvpredipred.pdf", wait = F)
+            }
             setwd(homepath)
           })
   
@@ -2247,7 +2279,9 @@ server <- function(input, output,session) {
             pdf(file = pdf.filename, width = 10, height = 7, title = pdf.title)
             print(cov.splom(xpdb))
             dev.off()
-            shell("covscatter.pdf", wait = F)
+            if(OS == "Windows"){
+              shell("covscatter.pdf", wait = F)
+            }
             setwd(homepath)
           })
   }
