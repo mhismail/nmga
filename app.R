@@ -1,4 +1,4 @@
-#turn off any graphics devices
+#STABLE-test
 graphics.off()
 rm(list = ls())
 
@@ -779,7 +779,7 @@ server <- function(input, output,session) {
           
           if(any(covlist == input$cov)){
             values <- as.numeric(datafile()[which(covlist == input$cov)][[1]])
-            median <- median(values,na.rm = T) %>% round(7)
+            median <- median(values,na.rm = T) %>% round(2)
             
             if (input$center == T){
               
@@ -1145,7 +1145,6 @@ server <- function(input, output,session) {
       }
       
       
-      }
     }
     
     x <- input$ace
@@ -1181,8 +1180,6 @@ server <- function(input, output,session) {
   
   
   onclick("refreshmods", {
-    write.csv(alltokens, "alltokens.csv", row.names = F)
-    writeLines(input$ace, list.files(pattern = ".*.ctl")[1])
     
     #delete models folder if it exists
     unlink("models/All", force = TRUE, recursive = T)
@@ -1683,7 +1680,7 @@ server <- function(input, output,session) {
                               Fitness = numeric(0))
     
     nmods <- dim(allmods)[1]
-    nindiv <- 38
+    nindiv <- 20
     if (nindiv > nmods) nindiv <- nmods
     InitiateGA(nmods, nindiv, control = input$ace, 
                alltokens = alltokens, allmods = allmods, 

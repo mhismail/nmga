@@ -36,7 +36,7 @@ CheckThenCreate<- function (path,control=NULL,alltokens=NULL,allmods = NULL )({
     mod<-as.numeric(sub(".*mod([0-9]+).*","\\1",path))
     x <- control
     x <- gsub("\\$DATA\\s*", "\\$DATA ../../",x) 
-    x<-CreateModel(x,alltokens,allmods[mod,])
+    x<-CreateModel(x,alltokens,allmods[mod,],names(allmods))
     dir.create(paste0("models/All/mod",mod))
     writeLines(x,paste0("models/All/mod",mod,"/mod.ctl"))
     
@@ -70,11 +70,10 @@ CheckThenCreate<- function (path,control=NULL,alltokens=NULL,allmods = NULL )({
 #' @param tokengroups Data frame containing general model features (tokengroups).
 #' @export
 
-CreateModel<- function(controlstream,alltokens,phenotype){ 
+CreateModel<- function(controlstream,alltokens,phenotype,tokengroups){ 
   x<-controlstream 
-  tokengroups <-names(phenotype)
-  print(tokengroups)
-
+  
+    
   for (j in 1:length(phenotype)){
     selectedTokenGroup <- tokengroups[j] 
 	
