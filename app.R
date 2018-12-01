@@ -1142,7 +1142,7 @@ server <- function(input, output,session) {
                           alltokens$tokenset == unique(alltokens$tokenset[alltokens$tokengroup == input$edittokengroupname])[i]][j] <- input[[paste0("edittoken", i, j
                           )]]
 
-      
+      }
       
       
       }
@@ -1251,7 +1251,8 @@ server <- function(input, output,session) {
         checkpresent <- file.exists(paste0(modelsran[,1], "/results/PsN_execute_plots.R"))
         resultspresent <- modelsran[checkpresent,]
         if (dim(resultspresent)[1] > 0){
-          results <- lapply(resultspresent[,1], RetrieveResults)
+          results <- lapply(resultspresent[,1], RetrieveResultsEach)
+          print(results)
           removerefreshed <- modelsran[!checkpresent,]
           write.table(removerefreshed,
                       "modelruntemp.csv", sep = ",", row.names = F, col.names = F)
@@ -1265,7 +1266,7 @@ server <- function(input, output,session) {
           # in which the number equals the value in mods. na.omit removes na values. 
           # 1,3,5,6 are columns to be updated right side !is.na is safegaurd for models 
           # that were run but have since been deleted before results were fetched
-          allmodsresults[na.omit(match(mods, allmodsresults$Number)), c(1, 3, 5, 6)] <- resultsdf[!is.na(match(mods, allmodsresults$Number)),]
+          allmodsresults[na.omit(match(mods, allmodsresults$Number)), ] <- resultsdf[!is.na(match(mods, allmodsresults$Number)),]
           
           gz1 <- gzfile("Allmodsresults.csv.gz", "w")
           write.csv(allmodsresults, gz1, row.names = F)
@@ -1669,6 +1670,9 @@ server <- function(input, output,session) {
     showModal(
       GAmodal
     )
+    
+    maxgen <- max(summary$Generation)
+    updateRadioGroupButtons(session, "selectedgen", choices = 1:maxgen)
   })
   
   onclick("startGA", {
@@ -1968,20 +1972,11 @@ server <- function(input, output,session) {
     
     thetaindices <- seq(as.numeric(final$theta[2]) + 1,
                         as.numeric(final$theta[2]) + as.numeric(final$theta[3]))
-    omegaindices <-  seq(as.numeric(final$omega[2]) + 1,
-                         as.numeric(final$omega[2]) + as.numeric(final$omega[3]))
-    sigmaindices <-  seq(as.numeric(final$sigma[2]) + 1,
-                         as.numeric(final$sigma[2]) + as.numeric(final$sigma[3]))
+
     
     thetaSE <-  seq(as.numeric(final$setheta[2]) + 1, 
                     as.numeric(final$setheta[2]) + as.numeric(final$setheta[3]))
-    omegaSE <-  seq(as.numeric(final$seomega[2]) + 1, 
-                    as.numeric(final$seomega[2]) + as.numeric(final$seomega[3]))
-    sigmaSE <-  seq(as.numeric(final$sesigma[2]) + 1,
-                    as.numeric(final$sesigma[2]) + as.numeric(final$sesigma[3]))
-    
-    etaSHR <-  seq(as.numeric(final$shrinkage_eta[2]) + 1,
-                   as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
+
     
     rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"), as.is = T)
     
@@ -1990,19 +1985,12 @@ server <- function(input, output,session) {
     THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices] * 100)
     
     
-    OMEGA <- rawResults[omegaindices] 
-    OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] * 100
-    ETASHR <- rawResults[etaSHR]
-    
-    SIGMA <- rawResults[sigmaindices]
-    SIGMARSE <- rawResults[sigmaSE]/rawResults[sigmaindices] * 100
-    
     THETATBL <- as.data.frame(cbind(t(THETA), t(THETASE)))
     
     names(THETATBL) <- c("Estimate", "RSE (%)")
     
     THETATBL
-  }, rownames = T)
+  }, rownames = T, digits = -3)
   
   output$omegas <- renderTable({
     homepath <- getwd()#"M:/Users/mhismail-shared/Rprogramming/genetic algorithm/GA"
@@ -2018,19 +2006,15 @@ server <- function(input, output,session) {
     final <- as.data.frame(d, stringsAsFactors = F)
     names(final) <- final[1,]
     
-    thetaindices <- seq(as.numeric(final$theta[2]) + 1,
-                        as.numeric(final$theta[2]) + as.numeric(final$theta[3]))
+
     omegaindices <- seq(as.numeric(final$omega[2]) + 1,
                         as.numeric(final$omega[2]) + as.numeric(final$omega[3]))
-    sigmaindices <- seq(as.numeric(final$sigma[2]) + 1,
-                        as.numeric(final$sigma[2]) + as.numeric(final$sigma[3]))
+ 
     
-    thetaSE <- seq(as.numeric(final$setheta[2]) + 1,
-                    as.numeric(final$setheta[2]) + as.numeric(final$setheta[3]))
+
     omegaSE <- seq(as.numeric(final$seomega[2]) + 1,
                     as.numeric(final$seomega[2]) + as.numeric(final$seomega[3]))
-    sigmaSE <- seq(as.numeric(final$sesigma[2]) + 1,
-                    as.numeric(final$sesigma[2]) + as.numeric(final$sesigma[3]))
+ 
     
     etaSHR <- seq(as.numeric(final$shrinkage_eta[2]) + 1,
                    as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
@@ -2062,40 +2046,20 @@ server <- function(input, output,session) {
     final<- as.data.frame(d, stringsAsFactors = F)
     names(final) <- final[1,]
     
-    thetaindices <- seq(as.numeric(final$theta[2]) + 1,
-                        as.numeric(final$theta[2]) + as.numeric(final$theta[3]))
-    omegaindices <- seq(as.numeric(final$omega[2]) + 1,
-                        as.numeric(final$omega[2]) + as.numeric(final$omega[3]))
+  
     sigmaindices <- seq(as.numeric(final$sigma[2]) + 1,
                         as.numeric(final$sigma[2]) + as.numeric(final$sigma[3]))
     
-    thetaSE <- seq(as.numeric(final$setheta[2]) + 1, 
-                   as.numeric(final$setheta[2]) + as.numeric(final$setheta[3]))
-    omegaSE <- seq(as.numeric(final$seomega[2]) + 1,
-                   as.numeric(final$seomega[2]) + as.numeric(final$seomega[3]))
+ 
     sigmaSE <- seq(as.numeric(final$sesigma[2]) + 1,
                    as.numeric(final$sesigma[2]) + as.numeric(final$sesigma[3]))
     
-    etaSHR <- seq(as.numeric(final$shrinkage_eta[2]) + 1,
-                   as.numeric(final$shrinkage_eta[2]) + as.numeric(final$shrinkage_eta[3]))
-    
+  
     rawResults <- read.csv(paste0(homepath, "/", relpath, "/results/raw_results_mod.csv"), as.is = T)
     
-    THETA <- rawResults[thetaindices] 
-    THETASE <- abs(rawResults[thetaSE]/rawResults[thetaindices] * 100)
-    
-    OMEGA <- rawResults[omegaindices] 
-    OMEGARSE <- rawResults[omegaSE]/rawResults[omegaindices] * 100
-    ETASHR <- rawResults[etaSHR]
-    
+  
     SIGMA <- rawResults[sigmaindices]
     SIGMARSE <- rawResults[sigmaSE]/rawResults[sigmaindices] * 100
-    
-    THETATBL <- as.data.frame(cbind(t(THETA), t(THETASE)))
-    names(THETATBL) <- c("Estimate", "RSE (%)")
-    
-    OMEGATBL <- as.data.frame(cbind(t(OMEGA), t(OMEGARSE), t(ETASHR)))
-    names(OMEGATBL) <- c("Estimate","RSE (%)", "Shrinkage (%)")
     
     SIGMATBL <- as.data.frame(cbind(t(SIGMA), t(SIGMARSE)))
     names(SIGMATBL) <- c("Estimate", "RSE (%)")
@@ -2141,8 +2105,6 @@ server <- function(input, output,session) {
     
     allcor <- data.frame()
     allcor <- rbind(allcor, do.call(rbind, all))
-    
-    
     
     
   }, rownames = F)
